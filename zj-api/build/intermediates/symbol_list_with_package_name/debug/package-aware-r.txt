@@ -1,0 +1,2 @@
+com.zj.api
+string app_name
