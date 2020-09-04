@@ -19,17 +19,12 @@ import okhttp3.internal.platform.Platform.INFO
 
 class HttpLoggingInterceptor @JvmOverloads constructor(private val logger: ((message: String) -> Unit) = { message -> Platform.get().log(INFO, message, null) }) : Interceptor {
 
-    @Volatile
-    private var headersToRedact = emptySet<String>()
+    @Volatile private var headersToRedact = emptySet<String>()
 
-    @Volatile
-    private var level = Level.NONE
+    @Volatile private var level = Level.NONE
 
     enum class Level {
-        NONE,
-        BASIC,
-        HEADERS,
-        BODY
+        NONE, BASIC, HEADERS, BODY
     }
 
     fun redactHeader(name: String) {
@@ -66,10 +61,7 @@ class HttpLoggingInterceptor @JvmOverloads constructor(private val logger: ((mes
         val hasRequestBody = requestBody != null
 
         val connection = chain.connection()
-        var requestStartMessage = ("--> "
-                + request.method()
-                + ' '.toString() + request.url()
-                + if (connection != null) " " + connection.protocol() else "")
+        var requestStartMessage = ("--> " + request.method() + ' '.toString() + request.url() + if (connection != null) " " + connection.protocol() else "")
         if (!logHeaders && hasRequestBody) {
             requestStartMessage += " (" + requestBody?.contentLength() + "-byte body)"
         }
@@ -116,11 +108,9 @@ class HttpLoggingInterceptor @JvmOverloads constructor(private val logger: ((mes
                 logger.invoke("")
                 if (isPlaintext(buffer)) {
                     logger.invoke(buffer.readString(charset))
-                    logger.invoke("--> END " + request.method()
-                            + " (" + requestBody?.contentLength() + "-byte body)")
+                    logger.invoke("--> END " + request.method() + " (" + requestBody?.contentLength() + "-byte body)")
                 } else {
-                    logger.invoke("--> END " + request.method() + " (binary "
-                            + requestBody?.contentLength() + "-byte body omitted)")
+                    logger.invoke("--> END " + request.method() + " (binary " + requestBody?.contentLength() + "-byte body omitted)")
                 }
             }
         }
@@ -139,11 +129,7 @@ class HttpLoggingInterceptor @JvmOverloads constructor(private val logger: ((mes
         val responseBody = response.body() ?: return response
         val contentLength = responseBody.contentLength()
         val bodySize = if (contentLength != -1L) "$contentLength-byte" else "unknown-length"
-        logger.invoke("<-- "
-                + response.code()
-                + (if (response.message().isEmpty()) "" else ' ' + response.message())
-                + ' '.toString() + response.request().url()
-                + " (" + tookMs + "ms" + (if (!logHeaders) ", $bodySize body" else "") + ')'.toString())
+        logger.invoke("<-- " + response.code() + (if (response.message().isEmpty()) "" else ' ' + response.message()) + ' '.toString() + response.request().url() + " (" + tookMs + "ms" + (if (!logHeaders) ", $bodySize body" else "") + ')'.toString())
 
         if (logHeaders) {
             val headers = response.headers()
@@ -190,8 +176,7 @@ class HttpLoggingInterceptor @JvmOverloads constructor(private val logger: ((mes
                 }
 
                 if (gzippedLength != null) {
-                    logger.invoke("<-- END HTTP (" + buffer.size() + "-byte, "
-                            + gzippedLength + "-gzipped-byte body)")
+                    logger.invoke("<-- END HTTP (" + buffer.size() + "-byte, " + gzippedLength + "-gzipped-byte body)")
                 } else {
                     logger.invoke("<-- END HTTP (" + buffer.size() + "-byte body)")
                 }
@@ -236,9 +221,7 @@ class HttpLoggingInterceptor @JvmOverloads constructor(private val logger: ((mes
 
         private fun bodyHasUnknownEncoding(headers: Headers): Boolean {
             val contentEncoding = headers.get("Content-Encoding")
-            return (contentEncoding != null
-                    && !contentEncoding.equals("identity", ignoreCase = true)
-                    && !contentEncoding.equals("gzip", ignoreCase = true))
+            return (contentEncoding != null && !contentEncoding.equals("identity", ignoreCase = true) && !contentEncoding.equals("gzip", ignoreCase = true))
         }
     }
 }

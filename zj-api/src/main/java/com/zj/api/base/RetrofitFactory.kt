@@ -13,11 +13,13 @@ import java.io.InputStream
 
 class RetrofitFactory<T> internal constructor(private val timeout: Long, private val header: HeaderProvider? = null, private val urlProvider: UrlProvider?, private val certificate: Array<InputStream>? = null, private val factory: ApiFactory<T>? = null) {
 
-    private val getOkHttpClient: OkHttpClient; get() = factory?.getOkHttpClient ?: BaseHttpClient(header, urlProvider).getHttpClient(timeout, certificate)
+    private val debugAble: Boolean; get() = factory?.debugAble ?: false
+
+    private val getOkHttpClient: OkHttpClient; get() = factory?.getOkHttpClient ?: BaseHttpClient(header, urlProvider, debugAble).getHttpClient(timeout, certificate)
 
     private val getJsonConverter: Converter.Factory; get() = factory?.getJsonConverter ?: GsonConverterFactory.create()
 
-    private val getCallAdapterFactory: CallAdapter.Factory; get() = factory?.getCallAdapterFactory ?: RxJava2CallAdapterFactory.create()
+    private val getCallAdapterFactory: CallAdapter.Factory; get() = factory?.getCallAdapterFactory ?: RxJava2CallAdapterFactory.createAsync()
 
     private val mRetrofit: Retrofit; get() = factory?.mRetrofit ?: initRetrofit()
 

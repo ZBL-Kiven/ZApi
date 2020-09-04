@@ -1,5 +1,6 @@
 package com.zj.api.interfaces
 
+import com.zj.api.BuildConfig
 import okhttp3.OkHttpClient
 import retrofit2.CallAdapter
 import retrofit2.Converter
@@ -14,6 +15,8 @@ abstract class ApiFactory<T> {
     open val getCallAdapterFactory: CallAdapter.Factory? = null
 
     open val mRetrofit: Retrofit? = null
+
+    open val debugAble:Boolean = BuildConfig.DEBUG
 
     open fun createService(mRetrofit: Retrofit, cls: Class<T>): T? {
         return mRetrofit.create(cls)
