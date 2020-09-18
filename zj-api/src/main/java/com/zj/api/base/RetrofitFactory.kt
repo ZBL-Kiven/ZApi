@@ -13,7 +13,7 @@ import java.io.InputStream
 
 class RetrofitFactory<T> internal constructor(private val timeout: Long, private val header: HeaderProvider? = null, private val urlProvider: UrlProvider?, private val certificate: Array<InputStream>? = null, private val factory: ApiFactory<T>? = null) {
 
-    private val debugAble: Boolean; get() = factory?.debugAble ?: false
+    private val debugAble: Boolean; get() = factory?.debugAble ?: true
 
     private val getOkHttpClient: OkHttpClient; get() = factory?.getOkHttpClient ?: BaseHttpClient(header, urlProvider, debugAble).getHttpClient(timeout, certificate)
 

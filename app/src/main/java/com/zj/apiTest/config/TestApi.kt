@@ -30,6 +30,10 @@ object TestApi {
         })
     }
 
+    fun test() {
+        getDefaultApi<TestService>(Constance.cpvUrl, Constance.cpvHeader).request({ it.behaviorEvent("", "", "") })
+    }
+
     fun getIp(country: String, onResult: (String) -> Unit) {
         getDefaultApi<TestService>().request({ it.getWeather(country) }) { b, s, e ->
             if (!b) onResult(e?.message() ?: "un caught any!")
