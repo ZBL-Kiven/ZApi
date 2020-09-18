@@ -24,7 +24,7 @@ class BaseHttpClient(private val header: HeaderProvider? = null, private val url
         val sslTrustManager = TrustAllHostnameVerifier()
         builder.hostnameVerifier(sslTrustManager)
         if (logAble) {
-            builder.addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC))
+            builder.addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
         }
         return builder.build()
     }
