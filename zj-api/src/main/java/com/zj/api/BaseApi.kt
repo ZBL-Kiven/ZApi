@@ -74,7 +74,8 @@ class BaseApi<T : Any>(cls: Class<T>, factory: RetrofitFactory<T>?, private val 
             throwable?.let {
                 errorHandler?.onError(it)
             }
-            subscribe?.invoke(false, null, throwable as? HttpException)
+            val thr = throwable as? HttpException
+            subscribe?.invoke(thr?.code() == 204, null, thr)
         }).init()
     }
 
@@ -84,13 +85,10 @@ class BaseApi<T : Any>(cls: Class<T>, factory: RetrofitFactory<T>?, private val 
             subscribe?.invoke(true, data, null)
         }, { throwable ->
             throwable?.let {
-                if (throwable is HttpException && throwable.code() == 204) {
-                    subscribe?.invoke(true, null, throwable)
-                } else if (throwable is HttpException) {
-                    subscribe?.invoke(false, null, throwable as? HttpException)
-                }
                 errorHandler?.onError(it)
-            } ?: subscribe?.invoke(false, null, throwable as? HttpException)
+            }
+            val thr = throwable as? HttpException
+            subscribe?.invoke(thr?.code() == 204, null, thr)
         })
         requestInCompo.init()
         return object : RequestCompo {
