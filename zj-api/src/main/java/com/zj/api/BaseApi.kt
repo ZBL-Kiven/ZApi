@@ -10,14 +10,12 @@ import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import okhttp3.MediaType
-import okhttp3.ResponseBody
+import okhttp3.*
 import retrofit2.HttpException
 import retrofit2.Response
-import java.lang.StringBuilder
 
 @Suppress("MemberVisibilityCanBePrivate")
-class BaseApi<T : Any>(cls: Class<T>, factory: RetrofitFactory<T>?, private val errorHandler: ErrorHandler? = null, private val preError: Throwable? = null) : BaseRetrofit<T>(cls, factory) {
+class BaseApi<T : Any>(cls: Class<T>, private val factory: RetrofitFactory<T>?, private val errorHandler: ErrorHandler? = null, private val preError: Throwable? = null) : BaseRetrofit<T>(cls, factory) {
 
     companion object {
 
@@ -100,7 +98,9 @@ class BaseApi<T : Any>(cls: Class<T>, factory: RetrofitFactory<T>?, private val 
 
     private fun parseOrCreateHttpException(throwable: Throwable?, codeDefault: Int = 400): HttpException? {
         if (throwable is HttpException) return throwable
-        val sb = StringBuilder().append("parsed unknown error with : ").append(throwable?.message)
-        return HttpException(Response.error<ResponseBody>(codeDefault, ResponseBody.create(MediaType.get("Application/json"), sb.toString())))
+        val sb = StringBuilder().append("{").append("\"message\":\"parsed unknown error with : ").append(throwable?.message).append("\"")
+        val responseBody = ResponseBody.create(MediaType.get("Application/json"), sb.toString())
+        val raw = okhttp3.Response.Builder().body(responseBody).code(codeDefault).message(sb.toString()).protocol(Protocol.HTTP_1_1).request(Request.Builder().url(factory?.urlProvider?.url() ?: "https://unkown-host").headers(Headers.of(factory?.header ?: mapOf())).build()).build()
+        return HttpException(Response.error<ResponseBody>(responseBody, raw))
     }
 }

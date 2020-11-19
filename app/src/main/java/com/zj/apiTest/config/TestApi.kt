@@ -1,5 +1,6 @@
 package com.zj.apiTest.config
 
+import android.util.Log
 import com.zj.api.BaseApi
 import com.zj.api.interceptor.HeaderProvider
 import com.zj.api.interceptor.UrlProvider
@@ -9,6 +10,7 @@ import com.zj.apiTest.Constance
 import com.zj.apiTest.TestService
 import com.zj.apiTest.converter.FastJsonConverterFactory
 import retrofit2.Converter
+import retrofit2.HttpException
 
 object TestApi {
 
@@ -31,7 +33,9 @@ object TestApi {
     }
 
     fun test() {
-        getDefaultApi<TestService>(Constance.cpvUrl, Constance.cpvHeader).request({ it.behaviorEvent("", "", "") })
+        getDefaultApi<TestService>(Constance.cpvUrl, Constance.cpvHeader).request({ it.behaviorEvent("", "", "") }) { i, s, e ->
+            Log.e("=====", "test: ${e?.response()}")
+        }
     }
 
     fun getIp(country: String, onResult: (String) -> Unit) {
