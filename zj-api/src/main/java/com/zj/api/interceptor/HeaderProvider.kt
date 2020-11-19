@@ -2,6 +2,6 @@ package com.zj.api.interceptor
 
 interface HeaderProvider {
 
-    fun headers(): Map<String, String>
+    fun headers(): Map<out String, String>
 
 }

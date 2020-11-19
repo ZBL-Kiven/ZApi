@@ -1,6 +1,5 @@
 package com.zj.api.base
 
-import com.zj.api.interceptor.HeaderProvider
 import com.zj.api.interceptor.UrlProvider
 import com.zj.api.interfaces.ApiFactory
 import com.zj.api.retrofit.RxJava2CallAdapterFactory
@@ -11,7 +10,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.InputStream
 
-class RetrofitFactory<T> internal constructor(private val timeout: Long, private val header: HeaderProvider? = null, private val urlProvider: UrlProvider?, private val certificate: Array<InputStream>? = null, private val factory: ApiFactory<T>? = null) {
+class RetrofitFactory<T> internal constructor(private val timeout: Long, private val header: MutableMap<String, String>? = null, private val urlProvider: UrlProvider?, private val certificate: Array<InputStream>? = null, private val factory: ApiFactory<T>? = null) {
 
     private val debugAble: Boolean; get() = factory?.debugAble ?: true
 

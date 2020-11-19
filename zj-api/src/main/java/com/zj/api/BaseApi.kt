@@ -6,16 +6,18 @@ import com.zj.api.base.BaseApiProxy
 import com.zj.api.base.BaseRetrofit
 import com.zj.api.base.RetrofitFactory
 import com.zj.api.interfaces.ErrorHandler
-import com.zj.api.utils.TypeUtils
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import okhttp3.MediaType
+import okhttp3.ResponseBody
 import retrofit2.HttpException
-import java.lang.reflect.Type
+import retrofit2.Response
+import java.lang.StringBuilder
 
 @Suppress("MemberVisibilityCanBePrivate")
-class BaseApi<T : Any>(cls: Class<T>, factory: RetrofitFactory<T>?, private val errorHandler: ErrorHandler? = null) : BaseRetrofit<T>(cls, factory) {
+class BaseApi<T : Any>(cls: Class<T>, factory: RetrofitFactory<T>?, private val errorHandler: ErrorHandler? = null, private val preError: Throwable? = null) : BaseRetrofit<T>(cls, factory) {
 
     companion object {
 
@@ -43,32 +45,25 @@ class BaseApi<T : Any>(cls: Class<T>, factory: RetrofitFactory<T>?, private val 
         }
     }
 
-    fun <R> zip(observer: (T) -> Array<Observable<*>>, onFunc: (Any, Any, Any) -> R, subscribe: ((isSuccess: Boolean, data: R, throwable: HttpException?) -> Unit)? = null) {
-
-        val observables = observer.invoke(getService())
-        val obsMap = mutableMapOf<String, Observable<*>>()
-        observables.forEach {
-            val t: Type = TypeUtils.getFirstClassType(it::class.java)
-            val typeName = t.toString()
-            obsMap[typeName] = it
-        }
-
-    }
-
     fun <F> request(observer: (T) -> Observable<F>, subscribe: ((isSuccess: Boolean, data: F?, throwable: HttpException?) -> Unit)? = null) {
         val subscribeSchedulers: Scheduler = Schedulers.io()
         val observableSchedulers: Scheduler = AndroidSchedulers.mainThread()
         this.request(observer, subscribeSchedulers, observableSchedulers, subscribe)
     }
 
-    fun <F> call(observer: (T) -> Observable<F>, subscribe: ((isSuccess: Boolean, data: F?, throwable: HttpException?) -> Unit)? = null): RequestCompo {
+    fun <F> call(observer: (T) -> Observable<F>, subscribe: ((isSuccess: Boolean, data: F?, throwable: HttpException?) -> Unit)? = null): RequestCompo? {
         val subscribeSchedulers: Scheduler = Schedulers.io()
         val observableSchedulers: Scheduler = AndroidSchedulers.mainThread()
         return this.call(observer, subscribeSchedulers, observableSchedulers, subscribe)
     }
 
     fun <F> request(observer: (T) -> Observable<F>, subscribeSchedulers: Scheduler = Schedulers.io(), observableSchedulers: Scheduler = AndroidSchedulers.mainThread(), subscribe: ((isSuccess: Boolean, data: F?, throwable: HttpException?) -> Unit)? = null) {
-        RequestInCompo(observer(getService()), subscribeSchedulers, observableSchedulers, { data ->
+        val service = getService()
+        if (service == null) {
+            subscribe?.invoke(false, null, parseOrCreateHttpException(preError))
+            return
+        }
+        RequestInCompo(observer(service), subscribeSchedulers, observableSchedulers, { data ->
             subscribe?.invoke(true, data, null)
         }, { throwable ->
             throwable?.let {
@@ -79,9 +74,14 @@ class BaseApi<T : Any>(cls: Class<T>, factory: RetrofitFactory<T>?, private val 
         }).init()
     }
 
-    fun <F> call(observer: (T) -> Observable<F>, subscribeSchedulers: Scheduler = Schedulers.io(), observableSchedulers: Scheduler = AndroidSchedulers.mainThread(), subscribe: ((isSuccess: Boolean, data: F?, throwable: HttpException?) -> Unit)? = null): RequestCompo {
+    fun <F> call(observer: (T) -> Observable<F>, subscribeSchedulers: Scheduler = Schedulers.io(), observableSchedulers: Scheduler = AndroidSchedulers.mainThread(), subscribe: ((isSuccess: Boolean, data: F?, throwable: HttpException?) -> Unit)? = null): RequestCompo? {
+        val service = getService()
+        if (service == null) {
+            subscribe?.invoke(false, null, parseOrCreateHttpException(preError))
+            return null
+        }
         val requestInCompo: RequestInCompo<F>?
-        requestInCompo = RequestInCompo(observer(getService()), subscribeSchedulers, observableSchedulers, { data ->
+        requestInCompo = RequestInCompo(observer(service), subscribeSchedulers, observableSchedulers, { data ->
             subscribe?.invoke(true, data, null)
         }, { throwable ->
             throwable?.let {
@@ -96,5 +96,11 @@ class BaseApi<T : Any>(cls: Class<T>, factory: RetrofitFactory<T>?, private val 
                 requestInCompo.cancel()
             }
         }
+    }
+
+    private fun parseOrCreateHttpException(throwable: Throwable?, codeDefault: Int = 400): HttpException? {
+        if (throwable is HttpException) return throwable
+        val sb = StringBuilder().append("parsed unknown error with : ").append(throwable?.message)
+        return HttpException(Response.error<ResponseBody>(codeDefault, ResponseBody.create(MediaType.get("Application/json"), sb.toString())))
     }
 }

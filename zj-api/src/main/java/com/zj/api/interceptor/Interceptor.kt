@@ -11,7 +11,7 @@ import java.nio.charset.Charset
 import java.util.*
 
 
-class Interceptor(private val headerProvider: HeaderProvider? = null, private val urlProvider: UrlProvider?) : Interceptor {
+class Interceptor(private val header: MutableMap<String, String>? = null, private val urlProvider: UrlProvider?) : Interceptor {
 
     companion object {
 
@@ -73,7 +73,7 @@ class Interceptor(private val headerProvider: HeaderProvider? = null, private va
             val proxy: UrlProvider.UrlProxy = urlProvider.getProxy()
             newBuilder.url(request.url().newBuilder().scheme(proxy.protocol).host(proxy.host).port(proxy.port).build())
         }
-        headerProvider?.headers()?.let {
+        header?.let {
             if (!it.containsKey("Content-Type")) {
                 newBuilder.addHeader("Content-Type", "application/json")
             }
@@ -93,7 +93,7 @@ class Interceptor(private val headerProvider: HeaderProvider? = null, private va
                         rootMap[body.encodedName(i)] = URLDecoder.decode(body.encodedValue(i), "utf-8")
                     }
                 }
-                val pl = headerProvider?.headers()?.get("Content-Type") ?: "application/json"
+                val pl = header?.get("Content-Type") ?: "application/json"
                 chain.proceed((newBuilder.post(Gson().toJson(rootMap).toRequestBody(MediaType.get(pl))).build()))
             } else {
                 chain.proceed(newBuilder.build())

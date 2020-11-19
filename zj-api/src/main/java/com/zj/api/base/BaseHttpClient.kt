@@ -1,6 +1,5 @@
 package com.zj.api.base
 
-import com.zj.api.interceptor.HeaderProvider
 import com.zj.api.interceptor.HttpLoggingInterceptor
 import com.zj.api.interceptor.Interceptor
 import com.zj.api.interceptor.UrlProvider
@@ -14,7 +13,7 @@ import java.io.InputStream
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-class BaseHttpClient(private val header: HeaderProvider? = null, private val url: UrlProvider?, private val logAble: Boolean) {
+class BaseHttpClient(private val header: MutableMap<String, String>? = null, private val url: UrlProvider?, private val logAble: Boolean) {
 
     fun getHttpClient(timeout: Long, certificate: Array<InputStream>? = null): OkHttpClient {
         val builder = OkHttpClient.Builder()
