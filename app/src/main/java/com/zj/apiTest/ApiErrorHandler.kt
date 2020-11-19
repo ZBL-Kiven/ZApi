@@ -21,7 +21,6 @@ object ApiErrorHandler : ErrorHandler {
                 Log.e("http test", "net work error")
             } else {
                 Log.e("http test", "onHttpError ----- case: ${throwable.message}")
-                throw UnknownError(throwable.message)
             }
         }
         throwable.printStackTrace()

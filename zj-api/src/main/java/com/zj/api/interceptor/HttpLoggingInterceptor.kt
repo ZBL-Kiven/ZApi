@@ -3,7 +3,6 @@
 package com.zj.api.interceptor
 
 import java.io.EOFException
-import java.io.IOException
 import java.nio.charset.Charset
 import java.util.TreeSet
 import java.util.concurrent.TimeUnit
@@ -45,7 +44,6 @@ class HttpLoggingInterceptor @JvmOverloads constructor(private val logger: ((mes
         return level
     }
 
-    @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response {
         val level = this.level
 

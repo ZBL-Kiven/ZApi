@@ -12,7 +12,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         tv?.setOnClickListener {
-            TestApi.test()
+            TestApi.getIp("zh-CN") {
+                tv?.text = it
+            }
         }
     }
 }
