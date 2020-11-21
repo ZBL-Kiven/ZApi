@@ -39,13 +39,16 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
     fun build(factory: ApiFactory<T>? = null): BaseApi<T> {
         val map = mutableMapOf<String, String>()
         var throwable: Throwable? = null
-        var retrofitFactory: RetrofitFactory<T>? = RetrofitFactory(timeOut, map, baseUrl, certificate, factory)
         try {
             header?.headers()?.let { map.putAll(it) }
+        } catch (e: Throwable) {
+            throwable = e
         } catch (e: Exception) {
             throwable = e
-            retrofitFactory = null
+        } catch (e: java.lang.Exception) {
+            throwable = e
         }
+        val retrofitFactory = RetrofitFactory(throwable == null, timeOut, map, baseUrl, certificate, factory)
         return BaseApi(clazz, retrofitFactory, handler, throwable)
     }
 }

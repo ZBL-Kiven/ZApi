@@ -15,7 +15,7 @@ import retrofit2.HttpException
 import retrofit2.Response
 
 @Suppress("MemberVisibilityCanBePrivate")
-class BaseApi<T : Any>(cls: Class<T>, private val factory: RetrofitFactory<T>?, private val errorHandler: ErrorHandler? = null, private val preError: Throwable? = null) : BaseRetrofit<T>(cls, factory) {
+class BaseApi<T : Any> internal constructor(cls: Class<T>, private val factory: RetrofitFactory<T>, private val errorHandler: ErrorHandler? = null, private val preError: Throwable? = null) : BaseRetrofit<T>(cls, factory) {
 
     companion object {
 
@@ -100,7 +100,7 @@ class BaseApi<T : Any>(cls: Class<T>, private val factory: RetrofitFactory<T>?, 
         if (throwable is HttpException) return throwable
         val sb = StringBuilder().append("{").append("\"message\":\"parsed unknown error with : ").append(throwable?.message).append("\"")
         val responseBody = ResponseBody.create(MediaType.get("Application/json"), sb.toString())
-        val raw = okhttp3.Response.Builder().body(responseBody).code(codeDefault).message(sb.toString()).protocol(Protocol.HTTP_1_1).request(Request.Builder().url(factory?.urlProvider?.url() ?: "https://unkown-host").headers(Headers.of(factory?.header ?: mapOf())).build()).build()
+        val raw = okhttp3.Response.Builder().body(responseBody).code(codeDefault).message(sb.toString()).protocol(Protocol.HTTP_1_1).request(Request.Builder().url(factory.urlProvider?.url() ?: "https://unkown-host").headers(Headers.of(factory.header ?: mapOf())).build()).build()
         return HttpException(Response.error<ResponseBody>(responseBody, raw))
     }
 }

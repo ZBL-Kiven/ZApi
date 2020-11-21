@@ -5,20 +5,13 @@ import io.reactivex.Scheduler
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 
-abstract class BaseRetrofit<T>(cls: Class<T>, private val retrofitFactory: RetrofitFactory<T>?) {
-
-    private var mService: T? = null
-
-    init {
-        initService(cls)
-    }
-
-    private fun initService(cls: Class<T>) {
-        mService = retrofitFactory?.createService(cls)
-    }
+abstract class BaseRetrofit<T>(private val cls: Class<T>, private val retrofitFactory: RetrofitFactory<T>) {
 
     protected fun getService(): T? {
-        return mService
+        return retrofitFactory.let {
+            if (it.valuable) it.createService(cls)
+            else null
+        }
     }
 
     /** ------  RequestInCompo ------ **/

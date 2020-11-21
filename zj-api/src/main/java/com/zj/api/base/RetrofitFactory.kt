@@ -10,7 +10,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.InputStream
 
-class RetrofitFactory<T> internal constructor(private val timeout: Long, internal val header: MutableMap<String, String>? = null, internal val urlProvider: UrlProvider?, private val certificate: Array<InputStream>? = null, private val factory: ApiFactory<T>? = null) {
+class RetrofitFactory<T> internal constructor(internal val valuable: Boolean, private val timeout: Long, internal val header: MutableMap<String, String>? = null, internal val urlProvider: UrlProvider?, private val certificate: Array<InputStream>? = null, private val factory: ApiFactory<T>? = null) {
 
     private val debugAble: Boolean; get() = factory?.debugAble ?: true
 

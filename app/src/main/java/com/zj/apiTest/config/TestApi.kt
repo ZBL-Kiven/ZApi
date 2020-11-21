@@ -33,7 +33,7 @@ object TestApi {
     }
 
     fun test() {
-        getDefaultApi<TestService>(Constance.cpvUrl, Constance.cpvHeader).request({ it.behaviorEvent("", "", "") }) { i, s, e ->
+        getDefaultApi<TestService>(Constance.cpvUrl, Constance.cpvHeader).call({ it.behaviorEvent("", "", "") }) { i, s, e ->
             Log.e("=====", "test: ${e?.response()}")
         }
     }
