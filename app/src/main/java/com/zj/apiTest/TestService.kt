@@ -1,5 +1,6 @@
 package com.zj.apiTest
 
+import com.zj.apiTest.config.TestApi
 import io.reactivex.Observable
 import retrofit2.http.*
 
@@ -11,6 +12,9 @@ interface TestService {
     @FormUrlEncoded
     @POST("/behavior/event")
     fun behaviorEvent(@Field("eventType") eventType: String, @Field("sourceId") sourceId: String, @Field("pid") pid: String, @Field("feedName") feedName: String = ""): Observable<String>
+
+    @POST("/payerMaxApi/getOtherPayInfo")
+    fun getOtherPayInfo(@Body lang: String): Observable<String?>
 
     @GET("json/")
     fun getWeather(@Query("lang") lang: String): Observable<String>

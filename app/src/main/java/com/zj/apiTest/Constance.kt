@@ -11,19 +11,18 @@ object Constance {
 
     val cpvUrl = object : UrlProvider() {
         override fun url(): String {
-            return "https://cpv.ccdev.lerjin.com/"
+            return "https://api.ccdev.lerjin.com/"
         }
     }
 
     val cpvHeader = object : HeaderProvider {
         override fun headers(): Map<String, String> {
-            throw NullPointerException("asinakjsdqui asjnqs asd qf aqd qd")
-            //            return hashMapOf<String, String>().apply {
-            //                this["token"] = "OTY3MzE1M2ItZWY4Ny00MmI5LWFlY2YtNDJlNjFkZGIzMmI4"
-            //                this["userId"] = "115559"
-            //                this["ostype"] = "android"
-            //                this["uuid"] = UUID.randomUUID().toString()
-            //            }
+            return hashMapOf<String, String>().apply {
+                this["token"] = "OTY3MzE1M2ItZWY4Ny00MmI5LWFlY2YtNDJlNjFkZGIzMmI4"
+                this["userId"] = "115559"
+                this["ostype"] = "android"
+                this["uuid"] = UUID.randomUUID().toString()
+            }
         }
     }
 

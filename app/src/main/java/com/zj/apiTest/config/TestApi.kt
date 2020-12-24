@@ -33,7 +33,7 @@ object TestApi {
     }
 
     fun test() {
-        getDefaultApi<TestService>(Constance.cpvUrl, Constance.cpvHeader).call({ it.behaviorEvent("", "", "") }) { i, s, e ->
+        getDefaultApi<TestService>(Constance.cpvUrl).call({ it.getOtherPayInfo("{\"lang\":\"zh\"}") }) { i, s, e ->
             Log.e("=====", "test: ${e?.response()}")
         }
     }
@@ -44,4 +44,7 @@ object TestApi {
             else onResult(s ?: "data may empty")
         }
     }
+
+
+    data class OtherRequestInfo(var lang: String = "")
 }

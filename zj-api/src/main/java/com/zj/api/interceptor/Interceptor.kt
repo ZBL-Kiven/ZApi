@@ -1,6 +1,7 @@
 package com.zj.api.interceptor
 
 import com.google.gson.Gson
+import com.zj.api.interceptor.Interceptor.Companion.toRequestBody
 import okhttp3.*
 import okhttp3.Interceptor
 import okhttp3.internal.Util.checkOffsetAndCount
@@ -86,15 +87,17 @@ class Interceptor(private val header: MutableMap<String, String>? = null, privat
         }
         return try {
             if ("POST" == chain.request().method()) {
-                val rootMap = HashMap<String, Any>()
-                val body = chain.request().body()
+                val pl = header?.get("Content-Type") ?: "application/json"
+                val body = chain.request().body()!!
                 if (body is FormBody) {
+                    val rootMap = HashMap<String, Any>()
                     for (i in 0 until body.size()) {
                         rootMap[body.encodedName(i)] = URLDecoder.decode(body.encodedValue(i), "utf-8")
                     }
+                    chain.proceed((newBuilder.post(Gson().toJson(rootMap).toRequestBody(MediaType.get(pl))).build()))
+                } else {
+                    chain.proceed(newBuilder.post(body).build())
                 }
-                val pl = header?.get("Content-Type") ?: "application/json"
-                chain.proceed((newBuilder.post(Gson().toJson(rootMap).toRequestBody(MediaType.get(pl))).build()))
             } else {
                 chain.proceed(newBuilder.build())
             }
