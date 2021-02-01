@@ -1,7 +1,6 @@
 package com.zj.api.interceptor
 
 import com.google.gson.Gson
-import com.zj.api.interceptor.Interceptor.Companion.toRequestBody
 import okhttp3.*
 import okhttp3.Interceptor
 import okhttp3.internal.Util.checkOffsetAndCount
@@ -102,11 +101,19 @@ class Interceptor(private val header: MutableMap<String, String>? = null, privat
                 chain.proceed(newBuilder.build())
             }
         } catch (e: IllegalArgumentException) {
-            e.printStackTrace()
-            chain.proceed(request)
+            onErrorResponse(request, 500, "connection failed")
+        } catch (e: java.lang.IllegalArgumentException) {
+            onErrorResponse(request, 500, "connection failed")
         } catch (e: IOException) {
-            e.printStackTrace()
-            chain.proceed(request)
+            onErrorResponse(request, 404, "IO exception")
+        } catch (e: Exception) {
+            onErrorResponse(request, 400, "Unknown error")
+        } catch (e: java.lang.Exception) {
+            onErrorResponse(request, 400, "Unknown error")
         }
+    }
+
+    private fun onErrorResponse(request: Request, code: Int, message: String): Response {
+        return Response.Builder().code(code).message(message).body(ResponseBody.create(MediaType.get("application/json"), "UNKNOWN ERROR")).request(request).protocol(Protocol.HTTP_2).build()
     }
 }

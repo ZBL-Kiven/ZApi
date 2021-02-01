@@ -15,7 +15,6 @@ abstract class BaseRetrofit<T>(private val cls: Class<T>, private val retrofitFa
     }
 
     /** ------  RequestInCompo ------ **/
-
     companion object {
 
         internal val compo = CompositeDisposable()

@@ -6,6 +6,7 @@ import com.zj.api.base.BaseApiProxy
 import com.zj.api.base.BaseRetrofit
 import com.zj.api.base.RetrofitFactory
 import com.zj.api.interfaces.ErrorHandler
+//import com.zj.api.rdt.RdtMod
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -16,6 +17,8 @@ import retrofit2.Response
 
 @Suppress("MemberVisibilityCanBePrivate")
 class BaseApi<T : Any> internal constructor(cls: Class<T>, private val factory: RetrofitFactory<T>, private val errorHandler: ErrorHandler? = null, private val preError: Throwable? = null) : BaseRetrofit<T>(cls, factory) {
+
+    //    private val rdtMod: RdtMod? = null
 
     companion object {
 

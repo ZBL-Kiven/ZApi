@@ -1,5 +1,6 @@
 package com.zj.api.retrofit
 
+import com.zj.api.rdt.RdtProxyUtils
 import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Maybe
@@ -61,7 +62,7 @@ class RxJava2CallAdapterFactory private constructor(private val scheduler: Sched
                 isBody = true
             }
         }
-
+//        RdtProxyUtils.parseAnnotation(annotations)
         return RxJava2CallAdapter<Any>(responseType, scheduler, isAsync, isResult, isBody, isFlowAble, isSingle, isMaybe, false)
     }
 
