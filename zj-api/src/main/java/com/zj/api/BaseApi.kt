@@ -5,8 +5,7 @@ package com.zj.api
 import com.zj.api.base.BaseApiProxy
 import com.zj.api.base.BaseRetrofit
 import com.zj.api.base.RetrofitFactory
-import com.zj.api.interfaces.ErrorHandler
-//import com.zj.api.rdt.RdtMod
+import com.zj.api.interfaces.ErrorHandler //import com.zj.api.rdt.RdtMod
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -18,7 +17,6 @@ import retrofit2.Response
 @Suppress("MemberVisibilityCanBePrivate")
 class BaseApi<T : Any> internal constructor(cls: Class<T>, private val factory: RetrofitFactory<T>, private val errorHandler: ErrorHandler? = null, private val preError: Throwable? = null) : BaseRetrofit<T>(cls, factory) {
 
-    //    private val rdtMod: RdtMod? = null
 
     companion object {
 
@@ -67,11 +65,7 @@ class BaseApi<T : Any> internal constructor(cls: Class<T>, private val factory: 
         RequestInCompo(observer(service), subscribeSchedulers, observableSchedulers, { data ->
             subscribe?.invoke(true, data, null)
         }, { throwable ->
-            throwable?.let {
-                errorHandler?.onError(it)
-            }
-            val thr = throwable as? HttpException
-            subscribe?.invoke(thr?.code() == 204, null, thr)
+            dealError(throwable, subscribe)
         }).init()
     }
 
@@ -85,11 +79,7 @@ class BaseApi<T : Any> internal constructor(cls: Class<T>, private val factory: 
         requestInCompo = RequestInCompo(observer(service), subscribeSchedulers, observableSchedulers, { data ->
             subscribe?.invoke(true, data, null)
         }, { throwable ->
-            throwable?.let {
-                errorHandler?.onError(it)
-            }
-            val thr = throwable as? HttpException
-            subscribe?.invoke(thr?.code() == 204, null, thr)
+            dealError(throwable, subscribe)
         })
         requestInCompo.init()
         return object : RequestCompo {
@@ -99,7 +89,14 @@ class BaseApi<T : Any> internal constructor(cls: Class<T>, private val factory: 
         }
     }
 
-    private fun parseOrCreateHttpException(throwable: Throwable?, codeDefault: Int = 400): HttpException? {
+    private fun <F> dealError(throwable: Throwable?, subscribe: ((Boolean, F?, HttpException?) -> Unit)?) {
+        if (errorHandler?.onError(throwable) != true) {
+            val thr = throwable as? HttpException
+            subscribe?.invoke(thr?.code() == 204, null, thr)
+        }
+    }
+
+    private fun parseOrCreateHttpException(throwable: Throwable?, codeDefault: Int = 400): HttpException {
         if (throwable is HttpException) return throwable
         val sb = StringBuilder().append("{").append("\"message\":\"parsed unknown error with : ").append(throwable?.message).append("\"")
         val responseBody = ResponseBody.create(MediaType.get("Application/json"), sb.toString())

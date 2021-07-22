@@ -44,7 +44,7 @@ internal class CallExecuteObservable<T>(private val originalCall: Call<T>) : Obs
 
     }
 
-    private class CallDisposable internal constructor(private val call: Call<*>) : Disposable {
+    private class CallDisposable constructor(private val call: Call<*>) : Disposable {
         @Volatile
         private var disposed: Boolean = false
 

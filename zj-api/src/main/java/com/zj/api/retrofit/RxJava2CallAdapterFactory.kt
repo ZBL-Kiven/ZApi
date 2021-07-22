@@ -1,6 +1,5 @@
 package com.zj.api.retrofit
 
-import com.zj.api.rdt.RdtProxyUtils
 import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Maybe

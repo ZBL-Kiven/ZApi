@@ -111,7 +111,6 @@ public class NetworkUtils {
      * Is there an available network
      */
     public static boolean isNetworkAvailable(Context context) {
-        // 检测权限
         if (isDeniedPermission(context, Manifest.permission.ACCESS_NETWORK_STATE)) {
             return false;
         }

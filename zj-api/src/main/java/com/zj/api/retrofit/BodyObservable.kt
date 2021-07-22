@@ -15,7 +15,7 @@ internal class BodyObservable<T>(private val upstream: Observable<Response<T>>) 
         upstream.subscribe(BodyObserver(observer))
     }
 
-    private class BodyObserver<R> internal constructor(private val observer: Observer<in R>) : Observer<Response<R>> {
+    private class BodyObserver<R> constructor(private val observer: Observer<in R>) : Observer<Response<R>> {
         private var terminated: Boolean = false
 
         override fun onSubscribe(disposable: Disposable) {

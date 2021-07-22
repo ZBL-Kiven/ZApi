@@ -14,7 +14,7 @@ internal class ResultObservable<T>(private val upstream: Observable<Response<T>>
         upstream.subscribe(ResultObserver(observer))
     }
 
-    private class ResultObserver<R> internal constructor(private val observer: Observer<in Result<R>>) : Observer<Response<R>> {
+    private class ResultObserver<R> constructor(private val observer: Observer<in Result<R>>) : Observer<Response<R>> {
 
         override fun onSubscribe(disposable: Disposable) {
             observer.onSubscribe(disposable)
