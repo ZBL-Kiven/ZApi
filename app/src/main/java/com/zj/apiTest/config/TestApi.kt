@@ -32,19 +32,10 @@ object TestApi {
         })
     }
 
-    fun test() {
-        getDefaultApi<TestService>(Constance.cpvUrl).call({ it.getOtherPayInfo("{\"lang\":\"zh\"}") }) { i, s, e ->
-            Log.e("=====", "test: ${e?.response()}")
-        }
-    }
-
     fun getIp(country: String, onResult: (String) -> Unit) {
         getDefaultApi<TestService>().request({ it.getWeather(country) }) { b, s, e ->
             if (!b) onResult(e?.message() ?: "un caught any!")
             else onResult(s ?: "data may empty")
         }
     }
-
-
-    data class OtherRequestInfo(var lang: String = "")
 }

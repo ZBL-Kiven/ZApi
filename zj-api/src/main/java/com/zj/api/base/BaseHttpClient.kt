@@ -3,7 +3,6 @@ package com.zj.api.base
 import com.zj.api.interceptor.HttpLoggingInterceptor
 import com.zj.api.interceptor.Interceptor
 import com.zj.api.interceptor.UrlProvider
-import com.zj.api.utils.SSLParams
 import com.zj.api.utils.TrustAllCerts
 import com.zj.api.utils.TrustAllHostnameVerifier
 import com.zj.api.utils.getSslSocketFactory
@@ -33,11 +32,10 @@ class BaseHttpClient(private val header: MutableMap<String, String>? = null, pri
 
     private fun OkHttpClient.Builder.buildSSLSocketFactory(certificate: Array<InputStream>? = null): OkHttpClient.Builder {
         if (!certificate.isNullOrEmpty()) {
-            val sslParams: SSLParams? = getSslSocketFactory(certificate, null, null)
-            val sslSocketFactory = sslParams?.sSLSocketFactory
-            val trustManager = sslParams?.trustManager
+            val sslParams = getSslSocketFactory(certificate, null, null)
+            val sslSocketFactory = sslParams.sSLSocketFactory
+            val trustManager = sslParams.trustManager
             if (sslSocketFactory != null && trustManager != null) return this.sslSocketFactory(sslSocketFactory, trustManager)
-
         }
         val sslFactory = TrustAllCerts.createSSLSocketFactory() ?: return this
         return this.sslSocketFactory(sslFactory, TrustAllCerts)

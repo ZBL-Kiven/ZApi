@@ -26,4 +26,9 @@ object ApiErrorHandler : ErrorHandler {
         throwable?.printStackTrace()
         return false
     }
+
+    override fun interruptSuccessBody(data: Any?): Boolean {
+        Log.e("----- ", "test interrupt result data   $data")
+        return false
+    }
 }

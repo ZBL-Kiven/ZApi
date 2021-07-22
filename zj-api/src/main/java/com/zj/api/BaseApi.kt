@@ -63,6 +63,7 @@ class BaseApi<T : Any> internal constructor(cls: Class<T>, private val factory: 
             return
         }
         RequestInCompo(observer(service), subscribeSchedulers, observableSchedulers, { data ->
+            if (errorHandler?.interruptSuccessBody(data) == true) return@RequestInCompo
             subscribe?.invoke(true, data, null)
         }, { throwable ->
             dealError(throwable, subscribe)
@@ -77,6 +78,7 @@ class BaseApi<T : Any> internal constructor(cls: Class<T>, private val factory: 
         }
         val requestInCompo: RequestInCompo<F>?
         requestInCompo = RequestInCompo(observer(service), subscribeSchedulers, observableSchedulers, { data ->
+            if (errorHandler?.interruptSuccessBody(data) == true) return@RequestInCompo
             subscribe?.invoke(true, data, null)
         }, { throwable ->
             dealError(throwable, subscribe)

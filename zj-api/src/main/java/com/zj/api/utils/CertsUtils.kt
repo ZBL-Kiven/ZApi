@@ -58,8 +58,7 @@ fun getSslSocketFactory(certificates: Array<InputStream>, bksFile: InputStream?,
         val trustManagers = prepareTrustManager(*certificates)
         val keyManagers = prepareKeyManager(bksFile, password)
         val sslContext = SSLContext.getInstance("TLS")
-        val trustManager: X509TrustManager?
-        trustManager = if (trustManagers != null) {
+        val trustManager = if (trustManagers != null) {
             MyTrustManager(chooseTrustManager(trustManagers))
         } else {
             UnSafeTrustManager()
