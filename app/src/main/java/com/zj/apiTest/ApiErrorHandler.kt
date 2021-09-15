@@ -8,7 +8,7 @@ import java.net.UnknownHostException
 
 object ApiErrorHandler : ErrorHandler {
 
-    override fun onError(throwable: Throwable?): Pair<Boolean, Throwable?> {
+    override fun onError(throwable: Throwable?): Pair<Boolean, Any?> {
         if (throwable is HttpException) {
             try {
                 val errorInfo = throwable.response()?.body()?.toString()
@@ -30,13 +30,13 @@ object ApiErrorHandler : ErrorHandler {
         return Pair(false, e)
     }
 
-    override fun interruptSuccessBody(data: Any?): Pair<Boolean, Throwable?> {
+    override fun interruptSuccessBody(data: Any?): Pair<Boolean, Any?> {
         Log.e("----- ", "test interrupt result data   $data")
         return Pair(false, null)
     }
 
 
-    class CusError : Throwable() {
+    class CusError {
         var code: Int = -1
         var msg: String? = ""
     }

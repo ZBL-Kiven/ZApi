@@ -31,7 +31,7 @@ object TestApi {
     }
 
     fun getIp(country: String, onResult: (String) -> Unit) {
-        getDefaultApi<TestService>().request({ it.getWeather(country) }) { b, s, e ->
+        getDefaultApi<TestService>().request({ it.getWeather(country) }) { b, s, e, a ->
             if (!b) onResult(e?.message ?: "un caught any!")
             else onResult(s ?: "data may empty")
         }

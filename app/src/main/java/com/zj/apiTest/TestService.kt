@@ -1,6 +1,5 @@
 package com.zj.apiTest
 
-import com.zj.apiTest.config.TestApi
 import io.reactivex.Observable
 import retrofit2.http.*
 
