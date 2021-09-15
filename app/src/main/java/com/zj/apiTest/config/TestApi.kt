@@ -1,6 +1,5 @@
 package com.zj.apiTest.config
 
-import android.util.Log
 import com.zj.api.BaseApi
 import com.zj.api.interceptor.HeaderProvider
 import com.zj.api.interceptor.UrlProvider
@@ -10,7 +9,6 @@ import com.zj.apiTest.Constance
 import com.zj.apiTest.TestService
 import com.zj.apiTest.converter.FastJsonConverterFactory
 import retrofit2.Converter
-import retrofit2.HttpException
 
 object TestApi {
 
@@ -34,7 +32,7 @@ object TestApi {
 
     fun getIp(country: String, onResult: (String) -> Unit) {
         getDefaultApi<TestService>().request({ it.getWeather(country) }) { b, s, e ->
-            if (!b) onResult(e?.message() ?: "un caught any!")
+            if (!b) onResult(e?.message ?: "un caught any!")
             else onResult(s ?: "data may empty")
         }
     }

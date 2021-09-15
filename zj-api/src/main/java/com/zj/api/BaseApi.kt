@@ -44,33 +44,34 @@ class BaseApi<T : Any> internal constructor(cls: Class<T>, private val factory: 
         }
     }
 
-    fun <F> request(observer: (T) -> Observable<F>, subscribe: ((isSuccess: Boolean, data: F?, throwable: HttpException?) -> Unit)? = null) {
+    fun <F> request(observer: (T) -> Observable<F>, subscribe: ((isSuccess: Boolean, data: F?, throwable: Throwable?) -> Unit)? = null) {
         val subscribeSchedulers: Scheduler = Schedulers.io()
         val observableSchedulers: Scheduler = AndroidSchedulers.mainThread()
         this.request(observer, subscribeSchedulers, observableSchedulers, subscribe)
     }
 
-    fun <F> call(observer: (T) -> Observable<F>, subscribe: ((isSuccess: Boolean, data: F?, throwable: HttpException?) -> Unit)? = null): RequestCompo? {
+    fun <F> call(observer: (T) -> Observable<F>, subscribe: ((isSuccess: Boolean, data: F?, throwable: Throwable?) -> Unit)? = null): RequestCompo? {
         val subscribeSchedulers: Scheduler = Schedulers.io()
         val observableSchedulers: Scheduler = AndroidSchedulers.mainThread()
         return this.call(observer, subscribeSchedulers, observableSchedulers, subscribe)
     }
 
-    fun <F> request(observer: (T) -> Observable<F>, subscribeSchedulers: Scheduler = Schedulers.io(), observableSchedulers: Scheduler = AndroidSchedulers.mainThread(), subscribe: ((isSuccess: Boolean, data: F?, throwable: HttpException?) -> Unit)? = null) {
+    fun <F> request(observer: (T) -> Observable<F>, subscribeSchedulers: Scheduler = Schedulers.io(), observableSchedulers: Scheduler = AndroidSchedulers.mainThread(), subscribe: ((isSuccess: Boolean, data: F?, throwable: Throwable?) -> Unit)? = null) {
         val service = getService()
         if (service == null) {
             subscribe?.invoke(false, null, parseOrCreateHttpException(preError))
             return
         }
         RequestInCompo(observer(service), subscribeSchedulers, observableSchedulers, { data ->
-            if (errorHandler?.interruptSuccessBody(data) == true) return@RequestInCompo
-            subscribe?.invoke(true, data, null)
+            val pair = errorHandler?.interruptSuccessBody(data)
+            if (pair?.first == true) return@RequestInCompo
+            subscribe?.invoke(true, data, pair?.second)
         }, { throwable ->
             dealError(throwable, subscribe)
         }).init()
     }
 
-    fun <F> call(observer: (T) -> Observable<F>, subscribeSchedulers: Scheduler = Schedulers.io(), observableSchedulers: Scheduler = AndroidSchedulers.mainThread(), subscribe: ((isSuccess: Boolean, data: F?, throwable: HttpException?) -> Unit)? = null): RequestCompo? {
+    fun <F> call(observer: (T) -> Observable<F>, subscribeSchedulers: Scheduler = Schedulers.io(), observableSchedulers: Scheduler = AndroidSchedulers.mainThread(), subscribe: ((isSuccess: Boolean, data: F?, throwable: Throwable?) -> Unit)? = null): RequestCompo? {
         val service = getService()
         if (service == null) {
             subscribe?.invoke(false, null, parseOrCreateHttpException(preError))
@@ -78,8 +79,9 @@ class BaseApi<T : Any> internal constructor(cls: Class<T>, private val factory: 
         }
         val requestInCompo: RequestInCompo<F>?
         requestInCompo = RequestInCompo(observer(service), subscribeSchedulers, observableSchedulers, { data ->
-            if (errorHandler?.interruptSuccessBody(data) == true) return@RequestInCompo
-            subscribe?.invoke(true, data, null)
+            val pair = errorHandler?.interruptSuccessBody(data)
+            if (pair?.first == true) return@RequestInCompo
+            subscribe?.invoke(true, data, pair?.second)
         }, { throwable ->
             dealError(throwable, subscribe)
         })
@@ -91,10 +93,11 @@ class BaseApi<T : Any> internal constructor(cls: Class<T>, private val factory: 
         }
     }
 
-    private fun <F> dealError(throwable: Throwable?, subscribe: ((Boolean, F?, HttpException?) -> Unit)?) {
-        if (errorHandler?.onError(throwable) != true) {
+    private fun <F> dealError(throwable: Throwable?, subscribe: ((Boolean, F?, Throwable?) -> Unit)?) {
+        val pair = errorHandler?.onError(throwable)
+        if (pair?.first != true) {
             val thr = throwable as? HttpException
-            subscribe?.invoke(thr?.code() == 204, null, thr)
+            subscribe?.invoke(thr?.code() == 204, null, pair?.second)
         }
     }
 
