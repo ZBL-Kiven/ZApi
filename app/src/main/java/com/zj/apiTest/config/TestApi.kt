@@ -8,6 +8,7 @@ import com.zj.apiTest.ApiErrorHandler
 import com.zj.apiTest.Constance
 import com.zj.apiTest.TestService
 import com.zj.apiTest.converter.FastJsonConverterFactory
+import io.reactivex.schedulers.Schedulers
 import retrofit2.Converter
 
 object TestApi {
@@ -31,7 +32,7 @@ object TestApi {
     }
 
     fun getIp(country: String, onResult: (String) -> Unit) {
-        getDefaultApi<TestService>().request({ it.getWeather(country) }) { b, s, e, a ->
+        getDefaultApi<TestService>().request({ it.getWeather(country) }) { b, s, e ->
             if (!b) onResult(e?.message ?: "un caught any!")
             else onResult(s ?: "data may empty")
         }
