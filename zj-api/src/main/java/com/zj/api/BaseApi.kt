@@ -82,6 +82,18 @@ class BaseApi<T : Any> internal constructor(cls: Class<T>, private val factory: 
     }
 
 
+    fun <F> request(observer: (T) -> Observable<F>, subscribeSchedulers: Scheduler = Schedulers.io(), observableSchedulers: Scheduler = AndroidSchedulers.mainThread(), subscribe: ((isSuccess: Boolean, data: F?, throwable: HttpException?) -> Unit)? = null) {
+        this.request(observer, subscribeSchedulers, observableSchedulers) { isSuccess: Boolean, data: F?, throwable: HttpException?, _ ->
+            subscribe?.invoke(isSuccess, data, throwable)
+        }
+    }
+
+    fun <F> call(observer: (T) -> Observable<F>, subscribeSchedulers: Scheduler = Schedulers.io(), observableSchedulers: Scheduler = AndroidSchedulers.mainThread(), subscribe: ((isSuccess: Boolean, data: F?, throwable: HttpException?) -> Unit)? = null): RequestCompo? {
+        return this.call(observer, subscribeSchedulers, observableSchedulers) { isSuccess: Boolean, data: F?, throwable: HttpException?, _ ->
+            subscribe?.invoke(isSuccess, data, throwable)
+        }
+    }
+
     fun <F> request(observer: (T) -> Observable<F>, subscribeSchedulers: Scheduler = Schedulers.io(), observableSchedulers: Scheduler = AndroidSchedulers.mainThread(), subscribe: ((isSuccess: Boolean, data: F?, throwable: HttpException?, overrideInfo: Any?) -> Unit)? = null) {
         val service = getService()
         if (service == null) {
