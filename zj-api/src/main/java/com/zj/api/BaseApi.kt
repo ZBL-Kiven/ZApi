@@ -9,6 +9,8 @@ import com.zj.api.interfaces.ErrorHandler //import com.zj.api.rdt.RdtMod
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.functions.Consumer
+import io.reactivex.plugins.RxJavaPlugins
 import io.reactivex.schedulers.Schedulers
 import okhttp3.*
 import retrofit2.HttpException
@@ -17,8 +19,11 @@ import retrofit2.Response
 @Suppress("MemberVisibilityCanBePrivate")
 class BaseApi<T : Any> internal constructor(cls: Class<T>, private val factory: RetrofitFactory<T>, private val errorHandler: ErrorHandler? = null, private val preError: Throwable? = null) : BaseRetrofit<T>(cls, factory) {
 
+    companion object : Consumer<Throwable> {
 
-    companion object {
+        init {
+            RxJavaPlugins.setErrorHandler(this)
+        }
 
         @Suppress("unused")
         @JvmStatic
@@ -41,6 +46,10 @@ class BaseApi<T : Any> internal constructor(cls: Class<T>, private val factory: 
         @JvmStatic
         fun <T : Any> create(cls: Class<T>): BaseApiProxy<T, *> {
             return BaseApiProxy<T, Nothing>(cls)
+        }
+
+        override fun accept(t: Throwable?) {
+            t?.printStackTrace()
         }
     }
 

@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.zj.apiTest.config.TestApi
 import kotlinx.android.synthetic.main.activity_main.*
+import java.lang.NullPointerException
 
 class MainActivity : AppCompatActivity() {
 
