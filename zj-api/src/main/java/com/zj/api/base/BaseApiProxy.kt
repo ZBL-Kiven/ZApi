@@ -48,7 +48,7 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
         } catch (e: java.lang.Exception) {
             throwable = e
         }
-        val retrofitFactory = RetrofitFactory(throwable == null, timeOut, map, baseUrl, certificate, factory)
+        val retrofitFactory = RetrofitFactory(throwable == null, clazz.simpleName, timeOut, map, baseUrl, certificate, factory)
         return BaseApi(clazz, retrofitFactory, handler, throwable)
     }
 }

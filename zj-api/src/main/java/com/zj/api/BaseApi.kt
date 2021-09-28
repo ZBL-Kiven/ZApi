@@ -6,6 +6,8 @@ import com.zj.api.base.BaseApiProxy
 import com.zj.api.base.BaseRetrofit
 import com.zj.api.base.RetrofitFactory
 import com.zj.api.interfaces.ErrorHandler //import com.zj.api.rdt.RdtMod
+import com.zj.api.utils.LogUtils
+import com.zj.api.utils.LoggerInterface
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -20,6 +22,10 @@ import retrofit2.Response
 class BaseApi<T : Any> internal constructor(cls: Class<T>, private val factory: RetrofitFactory<T>, private val errorHandler: ErrorHandler? = null, private val preError: Throwable? = null) : BaseRetrofit<T>(cls, factory) {
 
     companion object : Consumer<Throwable> {
+
+        fun setLoggerInterface(cls: Class<*>, lin: LoggerInterface) {
+            LogUtils.setByteSizeListener(cls, lin)
+        }
 
         init {
             RxJavaPlugins.setErrorHandler(this)

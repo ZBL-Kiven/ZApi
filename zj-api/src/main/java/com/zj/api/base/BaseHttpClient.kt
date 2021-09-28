@@ -12,7 +12,7 @@ import java.io.InputStream
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-class BaseHttpClient(private val header: MutableMap<String, String>? = null, private val url: UrlProvider?, private val logAble: Boolean) {
+class BaseHttpClient(private val clsName: String, private val header: MutableMap<String, String>? = null, private val url: UrlProvider?, private val logAble: Boolean) {
 
     fun getHttpClient(timeout: Long, certificate: Array<InputStream>? = null): OkHttpClient {
         val builder = OkHttpClient.Builder()
@@ -24,7 +24,7 @@ class BaseHttpClient(private val header: MutableMap<String, String>? = null, pri
         val sslTrustManager = TrustAllHostnameVerifier()
         builder.hostnameVerifier(sslTrustManager)
         if (logAble) {
-            builder.addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
+            builder.addInterceptor(HttpLoggingInterceptor(clsName).setLevel(HttpLoggingInterceptor.Level.BODY))
         }
         builder.protocols(Collections.unmodifiableList(listOf(Protocol.HTTP_1_1, Protocol.HTTP_2)))
         return builder.build()

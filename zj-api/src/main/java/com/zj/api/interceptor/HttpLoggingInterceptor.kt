@@ -2,6 +2,7 @@
 
 package com.zj.api.interceptor
 
+import com.zj.api.utils.LogUtils
 import java.io.EOFException
 import java.nio.charset.Charset
 import java.util.TreeSet
@@ -16,7 +17,7 @@ import okio.GzipSource
 
 import okhttp3.internal.platform.Platform.INFO
 
-class HttpLoggingInterceptor @JvmOverloads constructor(private val logger: ((message: String) -> Unit) = { message -> Platform.get().log(INFO, message, null) }) : Interceptor {
+class HttpLoggingInterceptor @JvmOverloads constructor(private val clsName: String, private val logger: ((message: String) -> Unit) = { message -> Platform.get().log(INFO, message, null) }) : Interceptor {
 
     @Volatile private var headersToRedact = emptySet<String>()
 
@@ -66,8 +67,7 @@ class HttpLoggingInterceptor @JvmOverloads constructor(private val logger: ((mes
         logger.invoke(requestStartMessage)
 
         if (logHeaders) {
-            if (hasRequestBody) {
-                // Request body headers are only present when installed as a network interceptor. Force
+            if (hasRequestBody) { // Request body headers are only present when installed as a network interceptor. Force
                 // them to be included (when available) so there values are known.
                 if (requestBody?.contentType() != null) {
                     logger.invoke("Content-Type: " + requestBody.contentType())
@@ -81,14 +81,13 @@ class HttpLoggingInterceptor @JvmOverloads constructor(private val logger: ((mes
             var i = 0
             val count = headers.size()
             while (i < count) {
-                val name = headers.name(i)
-                // Skip headers from the request body as they are explicitly logged above.
+                val name = headers.name(i) // Skip headers from the request body as they are explicitly logged above.
                 if (!"Content-Type".equals(name, ignoreCase = true) && !"Content-Length".equals(name, ignoreCase = true)) {
                     logHeader(headers, i)
                 }
                 i++
             }
-
+            logger.invoke("withClass: $clsName")
             if (!logBody || !hasRequestBody) {
                 logger.invoke("--> END " + request.method())
             } else if (bodyHasUnknownEncoding(request.headers())) {
@@ -102,14 +101,15 @@ class HttpLoggingInterceptor @JvmOverloads constructor(private val logger: ((mes
                 if (contentType != null) {
                     charset = contentType.charset(UTF8)
                 }
-
                 logger.invoke("")
+                val contentLength = requestBody?.contentLength()
                 if (isPlaintext(buffer)) {
                     logger.invoke(buffer.readString(charset))
-                    logger.invoke("--> END " + request.method() + " (" + requestBody?.contentLength() + "-byte body)")
+                    logger.invoke("--> END " + request.method() + " (" + contentLength + "-byte body)")
                 } else {
                     logger.invoke("--> END " + request.method() + " (binary " + requestBody?.contentLength() + "-byte body omitted)")
                 }
+                LogUtils.onSizeParsed(clsName, true, contentLength ?: 0L)
             }
         }
 
@@ -137,7 +137,7 @@ class HttpLoggingInterceptor @JvmOverloads constructor(private val logger: ((mes
                 logHeader(headers, i)
                 i++
             }
-
+            logger.invoke("withClass: $clsName")
             if (!logBody || !HttpHeaders.hasBody(response)) {
                 logger.invoke("<-- END HTTP")
             } else if (bodyHasUnknownEncoding(response.headers())) {
@@ -172,11 +172,13 @@ class HttpLoggingInterceptor @JvmOverloads constructor(private val logger: ((mes
                     logger.invoke("")
                     logger.invoke(buffer.clone().readString(charset))
                 }
-
+                val sendSize = buffer.size()
                 if (gzippedLength != null) {
-                    logger.invoke("<-- END HTTP (" + buffer.size() + "-byte, " + gzippedLength + "-gzipped-byte body)")
+                    LogUtils.onSizeParsed(clsName, false, gzippedLength)
+                    logger.invoke("<-- END HTTP ($sendSize-byte, $gzippedLength-gzipped-byte body)")
                 } else {
-                    logger.invoke("<-- END HTTP (" + buffer.size() + "-byte body)")
+                    LogUtils.onSizeParsed(clsName, false, sendSize)
+                    logger.invoke("<-- END HTTP ($sendSize-byte body)")
                 }
             }
         }
