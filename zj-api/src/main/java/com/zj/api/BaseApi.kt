@@ -5,6 +5,8 @@ package com.zj.api
 import com.zj.api.base.BaseApiProxy
 import com.zj.api.base.BaseRetrofit
 import com.zj.api.base.RetrofitFactory
+import com.zj.api.downloader.DownloadCompo
+import com.zj.api.downloader.DownloadListener
 import com.zj.api.interfaces.ErrorHandler //import com.zj.api.rdt.RdtMod
 import com.zj.api.utils.LogUtils
 import com.zj.api.utils.LoggerInterface
@@ -17,6 +19,7 @@ import io.reactivex.schedulers.Schedulers
 import okhttp3.*
 import retrofit2.HttpException
 import retrofit2.Response
+import java.io.File
 
 @Suppress("MemberVisibilityCanBePrivate")
 class BaseApi<T : Any> internal constructor(cls: Class<T>, private val factory: RetrofitFactory<T>, private val errorHandler: ErrorHandler? = null, private val preError: Throwable? = null) : BaseRetrofit<T>(cls, factory) {
@@ -52,6 +55,10 @@ class BaseApi<T : Any> internal constructor(cls: Class<T>, private val factory: 
         @JvmStatic
         fun <T : Any> create(cls: Class<T>): BaseApiProxy<T, *> {
             return BaseApiProxy<T, Nothing>(cls)
+        }
+
+        fun download(target: File, url: String, listener: DownloadListener): DownloadCompo {
+            return DownloadCompo(target, url, listener)
         }
 
         override fun accept(t: Throwable?) {
