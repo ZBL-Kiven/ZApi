@@ -7,6 +7,7 @@ import retrofit2.Retrofit
 
 abstract class ApiFactory<T> {
 
+
     open var okHttpClient: BaseHttpClient? = null
 
     open var jsonConverter: Converter.Factory? = null
@@ -15,7 +16,9 @@ abstract class ApiFactory<T> {
 
     open var mRetrofit: Retrofit? = null
 
-    open fun createService(mRetrofit: Retrofit, cls: Class<T>): T? {
+    open fun createService(mRetrofit: Retrofit, cls: Class<T>): T {
         return mRetrofit.create(cls)
     }
+
+    class Default<T> : ApiFactory<T>()
 }

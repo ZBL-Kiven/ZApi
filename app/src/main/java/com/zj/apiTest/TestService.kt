@@ -1,5 +1,8 @@
 package com.zj.apiTest
 
+import com.zj.api.coroutine.SuspendObservable
+import com.zj.api.mock.Mock
+import com.zj.apiTest.mock.MockTest
 import io.reactivex.Observable
 import retrofit2.http.*
 
@@ -19,5 +22,8 @@ interface TestService {
     fun getIp(@Query("lang") lang: String): Observable<Any>
 
     @GET("json/")
-    suspend fun getIpCour(@Query("lang") lang: String): String?
+    suspend fun getIpCourSimple(@Query("lang") lang: String): String?
+
+    @GET("json/")
+    suspend fun getIpCour(@Query("lang") lang: String): SuspendObservable<Any>?
 }

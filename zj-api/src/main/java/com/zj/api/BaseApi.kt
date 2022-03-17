@@ -77,7 +77,6 @@ class ZApi {
     }
 }
 
-
 fun <F> Observable<F>.call(lo: LifecycleOwner?, subscribe: ((isSuccess: Boolean, data: F?, throwable: HttpException?, errorHandlerResp: Any?) -> Unit)? = null): RequestCancelable {
     return call(lo, Schedulers.io(), AndroidSchedulers.mainThread(), subscribe)
 }

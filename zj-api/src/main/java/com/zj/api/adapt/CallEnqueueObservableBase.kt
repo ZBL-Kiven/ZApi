@@ -12,9 +12,15 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-internal class CallEnqueueObservableBase<T>(private val originalCall: Call<T?>, errorHandler: ErrorHandler?, private val preError: Throwable?) : BaseErrorHandlerObservable<Response<T?>?>(errorHandler) {
+internal class CallEnqueueObservableBase<T>(private val originalCall: Call<T?>, errorHandler: ErrorHandler?, private val preError: Throwable?, private val mockData: T?) : BaseErrorHandlerObservable<Response<T?>?>(errorHandler) {
 
     override fun subscribeActual(observer: Observer<in Response<T?>?>) {
+        if (mockData != null) {
+            Constance.dealSuccessDataWithEh(errorHandler, mockData) {
+                observer.onNext(Response.success(200, it))
+            }
+            return
+        }
         if (preError != null) {
             Constance.dealExceptionWithEhForObservers(errorHandler, preError, 400, originalCall, observer)
             return

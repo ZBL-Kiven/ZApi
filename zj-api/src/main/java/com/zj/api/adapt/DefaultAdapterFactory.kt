@@ -14,15 +14,14 @@ import retrofit2.Response
 import retrofit2.Retrofit
 
 @Suppress("unused")
-internal class DefaultAdapterFactory private constructor(private val scheduler: Scheduler?, private val isAsync: Boolean, private val errorHandler: ErrorHandler?, private val preError: Throwable?) : CallAdapter.Factory() {
+internal class DefaultAdapterFactory private constructor(private val scheduler: Scheduler?, private val isAsync: Boolean, private val errorHandler: ErrorHandler?, private val preError: Throwable?, private val mockData: Any? = null) : CallAdapter.Factory() {
 
 
     override fun get(returnType: Type, annotations: Array<Annotation>, retrofit: Retrofit): CallAdapter<*, *>? {
         val rawType = getRawType(returnType)
         if (rawType == Completable::class.java) {
-            return DefaultCallAdapter<Any>(Void::class.java, scheduler, isAsync, isResult = false, isBody = true, isFlowAble = false, isSingle = false, isMaybe = false, isCompletable = true, errorHandler, preError)
+            return DefaultCallAdapter(Void::class.java, scheduler, isAsync, isResult = false, isBody = true, isFlowAble = false, isSingle = false, isMaybe = false, isCompletable = true, errorHandler, preError, mockData)
         }
-
         val isFlowAble = rawType == Flowable::class.java
         val isSingle = rawType == Single::class.java
         val isMaybe = rawType == Maybe::class.java
@@ -63,7 +62,7 @@ internal class DefaultAdapterFactory private constructor(private val scheduler: 
                 isBody = true
             }
         }
-        return DefaultCallAdapter<Any>(responseType, scheduler, isAsync, isResult, isBody, isFlowAble, isSingle, isMaybe, false, errorHandler, preError)
+        return DefaultCallAdapter(responseType, scheduler, isAsync, isResult, isBody, isFlowAble, isSingle, isMaybe, false, errorHandler, preError, mockData)
     }
 
     companion object {
@@ -71,16 +70,16 @@ internal class DefaultAdapterFactory private constructor(private val scheduler: 
          * Returns an instance which creates synchronous observables that do not operate on any scheduler
          * by default.
          */
-        fun create(errorHandler: ErrorHandler?, preError: Throwable?): DefaultAdapterFactory {
-            return DefaultAdapterFactory(null, false, errorHandler, preError)
+        fun create(errorHandler: ErrorHandler?, preError: Throwable?, mockData: Any? = null): DefaultAdapterFactory {
+            return DefaultAdapterFactory(null, false, errorHandler, preError, mockData)
         }
 
         /**
          * Returns an instance which creates asynchronous observables. Applying
          * [Observable.subscribeOn] has no effect on stream types created by this factory.
          */
-        fun createAsync(errorHandler: ErrorHandler?, preError: Throwable?): DefaultAdapterFactory {
-            return DefaultAdapterFactory(null, true, errorHandler, preError)
+        fun createAsync(errorHandler: ErrorHandler?, preError: Throwable?, mockData: Any? = null): DefaultAdapterFactory {
+            return DefaultAdapterFactory(null, true, errorHandler, preError, mockData)
         }
 
         /**
@@ -88,9 +87,9 @@ internal class DefaultAdapterFactory private constructor(private val scheduler: 
          * [subscribe on][Observable.subscribeOn] `scheduler` by default.
          */
 
-        fun createWithScheduler(scheduler: Scheduler?, errorHandler: ErrorHandler?, preError: Throwable?): DefaultAdapterFactory {
+        fun createWithScheduler(scheduler: Scheduler?, errorHandler: ErrorHandler?, preError: Throwable?, mockData: Any? = null): DefaultAdapterFactory {
             if (scheduler == null) throw NullPointerException("scheduler == null")
-            return DefaultAdapterFactory(scheduler, false, errorHandler, preError)
+            return DefaultAdapterFactory(scheduler, false, errorHandler, preError, mockData)
         }
     }
 }

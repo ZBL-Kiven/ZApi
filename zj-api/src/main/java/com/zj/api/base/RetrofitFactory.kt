@@ -18,30 +18,31 @@ internal class RetrofitFactory<T>(
     private val header: MutableMap<String, String>?,
     private val urlProvider: UrlProvider?,
     private val certificate: Array<InputStream>?,
-    private val factory: ApiFactory<T>?,
+    private val factory: ApiFactory<T>,
     private val debugAble: Boolean,
+    private val mockAble: Boolean,
     private val errorHandler: ErrorHandler?,
     private val preError: Throwable?,
 ) {
 
     private val getOkHttpClient: OkHttpClient by lazy {
-        (factory?.okHttpClient ?: BaseHttpClient()).getHttpClient(clsName, header, urlProvider, debugAble, timeout, certificate)
+        (factory.okHttpClient ?: BaseHttpClient()).getHttpClient(clsName, header, urlProvider, debugAble, timeout, certificate)
     }
 
     private val getJsonConverter: Converter.Factory by lazy {
-        factory?.jsonConverter ?: GsonConverterFactory.create()
+        factory.jsonConverter ?: GsonConverterFactory.create()
     }
 
     private val getCallAdapterFactory: BaseCallAdapterFactory by lazy {
-        factory?.callAdapterFactory ?: ZApiCallAdapterFactory<T>(errorHandler)
+        factory.callAdapterFactory ?: ZApiCallAdapterFactory<T>(errorHandler, mockAble)
     }
 
     private val mRetrofit: Retrofit by lazy {
-        factory?.mRetrofit ?: initRetrofit()
+        factory.mRetrofit ?: initRetrofit()
     }
 
     fun createService(cls: Class<T>): T {
-        val service = factory?.createService(mRetrofit, cls) ?: mRetrofit.create(cls)
+        val service = factory.createService(mRetrofit, cls)
         val e = if (creatable == null) null else parseOrCreateHttpException(urlProvider?.url(), header, preError)
         getCallAdapterFactory.preError = e
         return service

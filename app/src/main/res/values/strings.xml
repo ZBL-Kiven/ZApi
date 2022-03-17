@@ -13,4 +13,5 @@
     <string name="request_by_callback_hint_lo">code : \n\t\ttestService.getIp(\"zh-cn\").call(lifecycleOwner) { isSuccess, data, throwable -> \n\t\t\t\t do something\n\t\t}</string>
     <string name="request_by_callback_hint">code : \n\t\tRequestCancelable compo = testService.getIp(\"zh-cn\").call(this) { isSuccess, data, throwable -> \n\t\t\t\t do something\n\t\t}</string>
     <string name="request_by_coroutine">request by Coroutine</string>
+    <string name="request_by_coroutine_simple">request by Coroutine SimpleData</string>
 </resources>

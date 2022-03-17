@@ -54,11 +54,20 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    fun requestByCoroutineSimpleTest(v: View) {
+        v as TextView
+        lifecycleScope.launch {
+            val obj = testService.getIpCourSimple("zh-cn")
+            Log.e("------", "$obj")
+            v.text = "$obj"
+        }
+    }
+
     fun requestByCoroutineTest(v: View) {
         v as TextView
         lifecycleScope.launch {
             val s = testService.getIpCour("zh-cn")
-            Log.e("------", "$s")
+            Log.e("------", "data = ${s?.data}  e = ${s?.error}   handled =  ${s?.fromErrorHandler}")
             v.text = "$s"
         }
     }
@@ -66,7 +75,7 @@ class MainActivity : AppCompatActivity() {
     fun requestTestByObserver(v: View) {
         v as TextView
         Log.e("------", "0000  ")
-        testService.getIp("zh-cn").call(this) { isSuccess, data, throwable ->
+        testService.getIp("zh-cn").call(this) { isSuccess, data, throwable, handled ->
             val s = "$isSuccess :  ${data.toString()}   $throwable"
             Log.e("------", s)
             v.text = s
@@ -76,7 +85,7 @@ class MainActivity : AppCompatActivity() {
     fun requestTestByCancelAbleObserver(v: View) {
         v as TextView
         var compo: RequestCancelable? = null
-        compo = testService.getIp("zh-cn").call { isSuccess, data, throwable ->
+        compo = testService.getIp("zh-cn").call { isSuccess, data, throwable, handled ->
             val s = "$isSuccess :  ${data.toString()}   $throwable"
             Log.e("------", s)
             v.text = s

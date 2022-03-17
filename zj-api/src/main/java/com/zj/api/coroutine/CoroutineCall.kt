@@ -10,10 +10,10 @@ import retrofit2.HttpException
 import retrofit2.Response
 import java.lang.IllegalArgumentException
 
-internal class CoroutineCall<F>(private val region: Call<F?>, private val errorHandler: ErrorHandler?, private val preError: Throwable?) : Call<SuspendObservable<F?>?> {
+internal class CoroutineCall<F>(private val region: Call<F?>, private val errorHandler: ErrorHandler?, private val preError: Throwable?, private val mockData: F?) : Call<SuspendObservable<F?>?> {
 
     override fun clone(): Call<SuspendObservable<F?>?> {
-        return CoroutineCall(region, errorHandler, preError)
+        return CoroutineCall(region, errorHandler, preError, mockData)
     }
 
     override fun execute(): Response<SuspendObservable<F?>?> {
@@ -21,11 +21,12 @@ internal class CoroutineCall<F>(private val region: Call<F?>, private val errorH
     }
 
     override fun enqueue(callback: Callback<SuspendObservable<F?>?>) {
+        if (mockData != null) {
+            onSuccess(callback, 200, mockData)
+            return
+        }
         if (preError != null) {
-            Constance.dealErrorWithEH(errorHandler, 400, region, preError) { error, s ->
-                val resp = SuspendObservable<F?>(null, error, s)
-                callback.onResponse(this, Response.success(resp))
-            }
+            onError(callback, 400, preError)
             return
         }
         val cb = object : Callback<F?> {
@@ -35,30 +36,34 @@ internal class CoroutineCall<F>(private val region: Call<F?>, private val errorH
                 val code = response.code()
                 if (response.isSuccessful && body != null) {
                     try {
-                        Constance.dealSuccessDataWithEh(errorHandler, body) {
-                            val rsp: Response<SuspendObservable<F?>?> = Response.success(code, SuspendObservable(it, null, null))
-                            callback.onResponse(this@CoroutineCall, rsp)
-                        }
+                        onSuccess(callback, code, body)
                     } catch (e: Exception) {
-                        onError(code, e)
+                        onError(callback, code, e)
                     }
                 } else {
-                    onError(code, HttpException(response))
+                    onError(callback, code, HttpException(response))
                 }
             }
 
             override fun onFailure(call: Call<F?>, t: Throwable) {
-                onError(400, t)
-            }
-
-            private fun onError(code: Int, e: Throwable) {
-                Constance.dealErrorWithEH(errorHandler, code, this@CoroutineCall, e) { error, s ->
-                    val resp = SuspendObservable<F?>(null, error, s)
-                    callback.onResponse(this@CoroutineCall, Response.success(resp))
-                }
+                onError(callback, 400, t)
             }
         }
         region.enqueue(cb)
+    }
+
+    private fun onError(callback: Callback<SuspendObservable<F?>?>, code: Int, e: Throwable) {
+        Constance.dealErrorWithEH(errorHandler, code, region, e) { error, s ->
+            val resp = SuspendObservable<F?>(null, error, s)
+            callback.onResponse(this, Response.success(resp))
+        }
+    }
+
+    private fun onSuccess(callback: Callback<SuspendObservable<F?>?>, code: Int, data: F?) {
+        Constance.dealSuccessDataWithEh(errorHandler, data) {
+            val rsp: Response<SuspendObservable<F?>?> = Response.success(code, SuspendObservable(it, null, null))
+            callback.onResponse(this@CoroutineCall, rsp)
+        }
     }
 
     override fun isExecuted(): Boolean {

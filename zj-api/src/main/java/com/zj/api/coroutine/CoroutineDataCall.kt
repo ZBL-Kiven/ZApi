@@ -10,10 +10,10 @@ import retrofit2.Callback
 import retrofit2.HttpException
 import retrofit2.Response
 
-internal class CoroutineDataCall<F : Any?>(private val region: Call<F?>, private val errorHandler: ErrorHandler?, private val preError: Throwable?) : Call<F?> {
+internal class CoroutineDataCall<F : Any?>(private val region: Call<F?>, private val errorHandler: ErrorHandler?, private val preError: Throwable?, private val mockData: F?) : Call<F?> {
 
     override fun clone(): Call<F?> {
-        return CoroutineDataCall(region, errorHandler, preError)
+        return CoroutineDataCall(region, errorHandler, preError, mockData)
     }
 
     override fun execute(): Response<F?> {
@@ -27,7 +27,13 @@ internal class CoroutineDataCall<F : Any?>(private val region: Call<F?>, private
                 LogUtils.e("CoroutineDataCall => Api(${region.request().url()}) using direct data request cannot return a error:\n\t${error.message()}\n\tHandled = ${s.toString()}\n\tUse @SuspendObservable<Foo> to get error messages when requested by a coroutine.")
             }
         }
-
+        if (mockData != null) {
+            Constance.dealSuccessDataWithEh(errorHandler, mockData) {
+                val rsp = Response.success(200, it)
+                callback.onResponse(this@CoroutineDataCall, rsp)
+            }
+            return
+        }
         if (preError != null) {
             onError(400, preError)
             return
@@ -40,7 +46,7 @@ internal class CoroutineDataCall<F : Any?>(private val region: Call<F?>, private
                 if (response.isSuccessful && body != null) {
                     try {
                         Constance.dealSuccessDataWithEh(errorHandler, body) {
-                            val rsp = Response.success(response.code(), body)
+                            val rsp = Response.success(response.code(), it)
                             callback.onResponse(this@CoroutineDataCall, rsp)
                         }
                     } catch (e: Exception) {

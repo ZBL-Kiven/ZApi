@@ -4,7 +4,6 @@ import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
-import retrofit2.HttpException
 
 
 class RequestInCompo<F>(private val observer: Observable<F>, private val subscribeSchedulers: Scheduler, private val observableSchedulers: Scheduler, private val subscribe: ((F?) -> Unit)? = null, private val exception: ((throwable: Throwable) -> Unit)? = null) {

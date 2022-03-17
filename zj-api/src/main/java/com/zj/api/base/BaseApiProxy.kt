@@ -15,6 +15,7 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
     private var header: HeaderProvider? = null
     private var baseUrl: UrlProvider? = null
     private var debugAble: Boolean = true
+    private var mockAble: Boolean = true
     private var certificate: Array<InputStream>? = null
 
     fun certificate(certificate: Array<InputStream>): BaseApiProxy<T, ERROR_HANDLER> {
@@ -37,8 +38,14 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
         return this
     }
 
-    fun debugAble(b: Boolean) {
+    fun globalMockAble(b: Boolean): BaseApiProxy<T, ERROR_HANDLER> {
+        this.mockAble = b
+        return this
+    }
+
+    fun debugAble(b: Boolean): BaseApiProxy<T, ERROR_HANDLER> {
         this.debugAble = b
+        return this
     }
 
     fun build(factory: ApiFactory<T>? = null): T {
@@ -58,6 +65,6 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
         } catch (e: java.lang.Exception) {
             throwable = e
         }
-        return RetrofitFactory(throwable, clazz.simpleName, timeOut, map, baseUrl, certificate, factory, debugAble, handler, throwable)
+        return RetrofitFactory(throwable, clazz.simpleName, timeOut, map, baseUrl, certificate, factory ?: ApiFactory.Default(), debugAble, mockAble, handler, throwable)
     }
 }
