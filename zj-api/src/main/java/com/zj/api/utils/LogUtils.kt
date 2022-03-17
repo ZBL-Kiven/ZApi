@@ -1,7 +1,6 @@
 package com.zj.api.utils
 
 import android.util.Log
-import com.zj.api.BaseApi
 import com.zj.api.BuildConfig
 import java.lang.Exception
 

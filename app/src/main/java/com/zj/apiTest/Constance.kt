@@ -38,9 +38,11 @@ object Constance {
     fun getHeader(): HeaderProvider {
         return object : HeaderProvider {
             override fun headers(): Map<String, String> {
-                return hashMapOf<String, String>().apply {
-                    this["Content-Type"] = "application/json"
-                }
+                throw IllegalArgumentException("测试不允许获取 Header！！！")
+
+                //                return hashMapOf<String, String>().apply {
+                //                    this["Content-Type"] = "application/json"
+                //                }
             }
         }
     }

@@ -1,7 +1,7 @@
 package com.zj.api.downloader
 
-import com.zj.api.base.BaseRetrofit
 import com.zj.api.downloader.Downloader.writeResponseToDisk
+import com.zj.api.interfaces.RequestCancelable
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
@@ -14,7 +14,7 @@ import java.io.File
 import java.util.concurrent.Executors
 
 
-class DownloadCompo internal constructor(target: File, url: String, private val listener: DownloadListener) : BaseRetrofit.RequestCompo {
+class DownloadCompo internal constructor(target: File, url: String, private val listener: DownloadListener) : RequestCancelable {
 
     private val compo: Call<ResponseBody>?
 
@@ -39,8 +39,8 @@ class DownloadCompo internal constructor(target: File, url: String, private val 
         })
     }
 
-    override fun cancel() {
+    override fun cancel(msg: String?, throwable: Throwable?) {
         compo?.cancel()
-        listener.onError(null, true)
+        if (msg.isNullOrEmpty().not() || throwable != null) listener.onError(Exception(msg, throwable), true)
     }
 }

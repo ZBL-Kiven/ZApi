@@ -1,6 +1,8 @@
-package com.zj.api.retrofit
+package com.zj.api.adapt
 
-import io.reactivex.Observable
+import com.zj.api.base.BaseErrorHandlerObservable
+import com.zj.api.interfaces.ErrorHandler
+import com.zj.api.utils.Constance
 import io.reactivex.Observer
 import io.reactivex.disposables.Disposable
 import io.reactivex.exceptions.CompositeException
@@ -10,27 +12,30 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-internal class CallEnqueueObservable<T>(private val originalCall: Call<T>) : Observable<Response<T>>() {
+internal class CallEnqueueObservableBase<T>(private val originalCall: Call<T?>, errorHandler: ErrorHandler?, private val preError: Throwable?) : BaseErrorHandlerObservable<Response<T?>?>(errorHandler) {
 
-    override fun subscribeActual(observer: Observer<in Response<T>>) {
-        // Since Call is a one-shot type, clone it for each new observer.
+    override fun subscribeActual(observer: Observer<in Response<T?>?>) {
+        if (preError != null) {
+            Constance.dealExceptionWithEhForObservers(errorHandler, preError, 400, originalCall, observer)
+            return
+        }
         val call = originalCall.clone()
         val callback = CallCallback(call, observer)
         observer.onSubscribe(callback)
         call.enqueue(callback)
     }
 
-    private class CallCallback<T> constructor(private val call: Call<*>, private val observer: Observer<in Response<T>>) : Disposable, Callback<T> {
-        @Volatile
-        private var disposed: Boolean = false
-        var terminated = false
+    inner class CallCallback constructor(private val call: Call<T?>, private val observer: Observer<in Response<T?>?>) : Disposable, Callback<T?> {
 
-        override fun onResponse(call: Call<T>, response: Response<T>) {
+        @Volatile private var disposed: Boolean = false
+        private var terminated = false
+
+        override fun onResponse(call: Call<T?>, response: Response<T?>) {
             if (disposed) return
-
             try {
-                observer.onNext(response)
-
+                Constance.dealSuccessDataWithEh(errorHandler, response.body()) {
+                    observer.onNext(Response.success(response.code(), it))
+                }
                 if (!disposed) {
                     terminated = true
                     observer.onComplete()
@@ -40,7 +45,7 @@ internal class CallEnqueueObservable<T>(private val originalCall: Call<T>) : Obs
                     RxJavaPlugins.onError(t)
                 } else if (!disposed) {
                     try {
-                        observer.onError(t)
+                        Constance.dealExceptionWithEhForObservers(errorHandler, t, response.code(), call, observer)
                     } catch (inner: Throwable) {
                         Exceptions.throwIfFatal(inner)
                         RxJavaPlugins.onError(CompositeException(t, inner))
@@ -49,16 +54,14 @@ internal class CallEnqueueObservable<T>(private val originalCall: Call<T>) : Obs
             }
         }
 
-        override fun onFailure(call: Call<T>, t: Throwable) {
+        override fun onFailure(call: Call<T?>, t: Throwable) {
             if (call.isCanceled) return
-
             try {
-                observer.onError(t)
+                Constance.dealExceptionWithEhForObservers(errorHandler, t, 400, call, observer)
             } catch (inner: Throwable) {
                 Exceptions.throwIfFatal(inner)
                 RxJavaPlugins.onError(CompositeException(t, inner))
             }
-
         }
 
         override fun dispose() {

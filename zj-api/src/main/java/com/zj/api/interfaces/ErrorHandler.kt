@@ -3,9 +3,9 @@ package com.zj.api.interfaces
 
 interface ErrorHandler {
 
-    fun onError(throwable: Throwable?): Pair<Boolean, Any?>
+    fun interruptErrorBody(throwable: Throwable?): Pair<Boolean, Any?>
 
-    fun interruptSuccessBody(data: Any?): Pair<Boolean, Any?> {
-        return Pair(false, null)
+    fun <R> interruptSuccessBody(data: R?): R? {
+        return data
     }
 }

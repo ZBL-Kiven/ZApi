@@ -18,6 +18,8 @@ dependencies {
     api "com.squareup.retrofit2:converter-gson:$retrofit2_version"
     api "com.squareup.retrofit2:retrofit:$retrofit2_version"
     api "io.reactivex.rxjava2:rxandroid:$rx_android"
+    api 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.0'
+    api "androidx.lifecycle:lifecycle-runtime-ktx:2.4.0"
 }
 
 apply from: 'upload.gradle'

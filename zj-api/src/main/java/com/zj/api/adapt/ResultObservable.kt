@@ -1,4 +1,4 @@
-package com.zj.api.retrofit
+package com.zj.api.adapt
 
 import io.reactivex.Observable
 import io.reactivex.Observer
@@ -8,19 +8,19 @@ import io.reactivex.exceptions.Exceptions
 import io.reactivex.plugins.RxJavaPlugins
 import retrofit2.Response
 
-internal class ResultObservable<T>(private val upstream: Observable<Response<T>>) : Observable<Result<T>>() {
+internal class ResultObservable<T>(private val upstream: Observable<Response<T?>?>) : Observable<Result<T?>?>() {
 
-    override fun subscribeActual(observer: Observer<in Result<T>>) {
+    override fun subscribeActual(observer: Observer<in Result<T?>?>) {
         upstream.subscribe(ResultObserver(observer))
     }
 
-    private class ResultObserver<R> constructor(private val observer: Observer<in Result<R>>) : Observer<Response<R>> {
+    private class ResultObserver<R> constructor(private val observer: Observer<in Result<R?>?>) : Observer<Response<R?>?> {
 
         override fun onSubscribe(disposable: Disposable) {
             observer.onSubscribe(disposable)
         }
 
-        override fun onNext(response: Response<R>) {
+        override fun onNext(response: Response<R?>) {
             observer.onNext(Result.response(response))
         }
 

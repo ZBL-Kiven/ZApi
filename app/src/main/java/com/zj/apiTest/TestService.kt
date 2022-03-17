@@ -16,5 +16,8 @@ interface TestService {
     fun getOtherPayInfo(@Body lang: String): Observable<String?>
 
     @GET("json/")
-    fun getWeather(@Query("lang") lang: String): Observable<String>
+    fun getIp(@Query("lang") lang: String): Observable<Any>
+
+    @GET("json/")
+    suspend fun getIpCour(@Query("lang") lang: String): String?
 }

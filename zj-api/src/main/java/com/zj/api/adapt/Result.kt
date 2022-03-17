@@ -1,11 +1,11 @@
 @file:Suppress("unused")
 
-package com.zj.api.retrofit
+package com.zj.api.adapt
 
 import retrofit2.Response
 
 /** The result of executing an HTTP request.  */
-class Result<T> private constructor(private val response: Response<T>?, private val error: Throwable?) {
+internal class Result<T> private constructor(private val response: Response<T>?, private val error: Throwable?) {
 
     /** `true` if the request resulted in an error. See [.error] for the cause.  */
     val isError: Boolean

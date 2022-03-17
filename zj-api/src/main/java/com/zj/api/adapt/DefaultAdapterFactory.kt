@@ -1,5 +1,6 @@
-package com.zj.api.retrofit
+package com.zj.api.adapt
 
+import com.zj.api.interfaces.ErrorHandler
 import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Maybe
@@ -13,12 +14,13 @@ import retrofit2.Response
 import retrofit2.Retrofit
 
 @Suppress("unused")
-class RxJava2CallAdapterFactory private constructor(private val scheduler: Scheduler?, private val isAsync: Boolean) : CallAdapter.Factory() {
+internal class DefaultAdapterFactory private constructor(private val scheduler: Scheduler?, private val isAsync: Boolean, private val errorHandler: ErrorHandler?, private val preError: Throwable?) : CallAdapter.Factory() {
+
 
     override fun get(returnType: Type, annotations: Array<Annotation>, retrofit: Retrofit): CallAdapter<*, *>? {
         val rawType = getRawType(returnType)
         if (rawType == Completable::class.java) {
-            return RxJava2CallAdapter<Any>(Void::class.java, scheduler, isAsync, isResult = false, isBody = true, isFlowAble = false, isSingle = false, isMaybe = false, isCompletable = true)
+            return DefaultCallAdapter<Any>(Void::class.java, scheduler, isAsync, isResult = false, isBody = true, isFlowAble = false, isSingle = false, isMaybe = false, isCompletable = true, errorHandler, preError)
         }
 
         val isFlowAble = rawType == Flowable::class.java
@@ -61,8 +63,7 @@ class RxJava2CallAdapterFactory private constructor(private val scheduler: Sched
                 isBody = true
             }
         }
-//        RdtProxyUtils.parseAnnotation(annotations)
-        return RxJava2CallAdapter<Any>(responseType, scheduler, isAsync, isResult, isBody, isFlowAble, isSingle, isMaybe, false)
+        return DefaultCallAdapter<Any>(responseType, scheduler, isAsync, isResult, isBody, isFlowAble, isSingle, isMaybe, false, errorHandler, preError)
     }
 
     companion object {
@@ -70,16 +71,16 @@ class RxJava2CallAdapterFactory private constructor(private val scheduler: Sched
          * Returns an instance which creates synchronous observables that do not operate on any scheduler
          * by default.
          */
-        fun create(): RxJava2CallAdapterFactory {
-            return RxJava2CallAdapterFactory(null, false)
+        fun create(errorHandler: ErrorHandler?, preError: Throwable?): DefaultAdapterFactory {
+            return DefaultAdapterFactory(null, false, errorHandler, preError)
         }
 
         /**
          * Returns an instance which creates asynchronous observables. Applying
          * [Observable.subscribeOn] has no effect on stream types created by this factory.
          */
-        fun createAsync(): RxJava2CallAdapterFactory {
-            return RxJava2CallAdapterFactory(null, true)
+        fun createAsync(errorHandler: ErrorHandler?, preError: Throwable?): DefaultAdapterFactory {
+            return DefaultAdapterFactory(null, true, errorHandler, preError)
         }
 
         /**
@@ -87,9 +88,9 @@ class RxJava2CallAdapterFactory private constructor(private val scheduler: Sched
          * [subscribe on][Observable.subscribeOn] `scheduler` by default.
          */
 
-        fun createWithScheduler(scheduler: Scheduler?): RxJava2CallAdapterFactory {
+        fun createWithScheduler(scheduler: Scheduler?, errorHandler: ErrorHandler?, preError: Throwable?): DefaultAdapterFactory {
             if (scheduler == null) throw NullPointerException("scheduler == null")
-            return RxJava2CallAdapterFactory(scheduler, false)
+            return DefaultAdapterFactory(scheduler, false, errorHandler, preError)
         }
     }
 }

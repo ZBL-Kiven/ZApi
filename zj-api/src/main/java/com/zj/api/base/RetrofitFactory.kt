@@ -1,29 +1,50 @@
 package com.zj.api.base
 
+import com.zj.api.adapt.ZApiCallAdapterFactory
 import com.zj.api.interceptor.UrlProvider
 import com.zj.api.interfaces.ApiFactory
-import com.zj.api.retrofit.RxJava2CallAdapterFactory
+import com.zj.api.interfaces.ErrorHandler
+import com.zj.api.utils.Constance.parseOrCreateHttpException
 import okhttp3.OkHttpClient
-import retrofit2.CallAdapter
 import retrofit2.Converter
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.InputStream
 
-class RetrofitFactory<T> internal constructor(internal val valuable: Boolean, private val clsName: String, private val timeout: Long, internal val header: MutableMap<String, String>? = null, internal val urlProvider: UrlProvider?, private val certificate: Array<InputStream>? = null, private val factory: ApiFactory<T>? = null) {
+internal class RetrofitFactory<T>(
+    private val creatable: Throwable?,
+    private val clsName: String,
+    private val timeout: Long,
+    private val header: MutableMap<String, String>?,
+    private val urlProvider: UrlProvider?,
+    private val certificate: Array<InputStream>?,
+    private val factory: ApiFactory<T>?,
+    private val debugAble: Boolean,
+    private val errorHandler: ErrorHandler?,
+    private val preError: Throwable?,
+) {
 
-    private val debugAble: Boolean; get() = factory?.debugAble ?: true
+    private val getOkHttpClient: OkHttpClient by lazy {
+        (factory?.okHttpClient ?: BaseHttpClient()).getHttpClient(clsName, header, urlProvider, debugAble, timeout, certificate)
+    }
 
-    private val getOkHttpClient: OkHttpClient; get() = factory?.getOkHttpClient ?: BaseHttpClient(clsName, header, urlProvider, debugAble).getHttpClient(timeout, certificate)
+    private val getJsonConverter: Converter.Factory by lazy {
+        factory?.jsonConverter ?: GsonConverterFactory.create()
+    }
 
-    private val getJsonConverter: Converter.Factory; get() = factory?.getJsonConverter ?: GsonConverterFactory.create()
+    private val getCallAdapterFactory: BaseCallAdapterFactory by lazy {
+        factory?.callAdapterFactory ?: ZApiCallAdapterFactory<T>(errorHandler)
+    }
 
-    private val getCallAdapterFactory: CallAdapter.Factory; get() = factory?.getCallAdapterFactory ?: RxJava2CallAdapterFactory.createAsync()
+    private val mRetrofit: Retrofit by lazy {
+        factory?.mRetrofit ?: initRetrofit()
+    }
 
-    private val mRetrofit: Retrofit; get() = factory?.mRetrofit ?: initRetrofit()
-
-    internal fun createService(cls: Class<T>): T {
-        return factory?.createService(mRetrofit, cls) ?: mRetrofit.create(cls)
+    fun createService(cls: Class<T>): T {
+        val service = factory?.createService(mRetrofit, cls) ?: mRetrofit.create(cls)
+        val e = if (creatable == null) null else parseOrCreateHttpException(urlProvider?.url(), header, preError)
+        getCallAdapterFactory.preError = e
+        return service
     }
 
     private fun initRetrofit(): Retrofit {
@@ -34,4 +55,5 @@ class RetrofitFactory<T> internal constructor(internal val valuable: Boolean, pr
         retrofit.addCallAdapterFactory(getCallAdapterFactory)
         return retrofit.build()
     }
+
 }

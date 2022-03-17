@@ -2,11 +2,11 @@
 
 package com.zj.api.base
 
-import com.zj.api.BaseApi
 import com.zj.api.interceptor.HeaderProvider
 import com.zj.api.interceptor.UrlProvider
 import com.zj.api.interfaces.ApiFactory
 import com.zj.api.interfaces.ErrorHandler
+import io.reactivex.Observer
 import java.io.InputStream
 
 class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Class<T>, private val handler: ERROR_HANDLER? = null) {
@@ -14,6 +14,7 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
     private var timeOut: Long = 10000
     private var header: HeaderProvider? = null
     private var baseUrl: UrlProvider? = null
+    private var debugAble: Boolean = true
     private var certificate: Array<InputStream>? = null
 
     fun certificate(certificate: Array<InputStream>): BaseApiProxy<T, ERROR_HANDLER> {
@@ -36,7 +37,16 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
         return this
     }
 
-    fun build(factory: ApiFactory<T>? = null): BaseApi<T> {
+    fun debugAble(b: Boolean) {
+        this.debugAble = b
+    }
+
+    fun build(factory: ApiFactory<T>? = null): T {
+        val retrofitFactory = createRetrofitFactory(factory)
+        return retrofitFactory.createService(clazz)
+    }
+
+    private fun createRetrofitFactory(factory: ApiFactory<T>?): RetrofitFactory<T> {
         val map = mutableMapOf<String, String>()
         var throwable: Throwable? = null
         try {
@@ -48,7 +58,6 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
         } catch (e: java.lang.Exception) {
             throwable = e
         }
-        val retrofitFactory = RetrofitFactory(throwable == null, clazz.simpleName, timeOut, map, baseUrl, certificate, factory)
-        return BaseApi(clazz, retrofitFactory, handler, throwable)
+        return RetrofitFactory(throwable, clazz.simpleName, timeOut, map, baseUrl, certificate, factory, debugAble, handler, throwable)
     }
 }
