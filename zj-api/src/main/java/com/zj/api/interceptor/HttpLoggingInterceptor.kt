@@ -145,7 +145,7 @@ class HttpLoggingInterceptor @JvmOverloads constructor(private val clsName: Stri
             } else {
                 val source = responseBody.source()
                 source.request(java.lang.Long.MAX_VALUE) // Buffer the entire body.
-                var buffer = source.buffer()
+                var buffer = source.buffer
                 var gzippedLength: Long? = null
                 if ("gzip".equals(headers.get("Content-Encoding") ?: "", ignoreCase = true)) {
                     gzippedLength = buffer.size()

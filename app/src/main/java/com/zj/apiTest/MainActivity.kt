@@ -2,6 +2,7 @@ package com.zj.apiTest
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.zj.api.ZApi
@@ -9,13 +10,13 @@ import com.zj.api.call
 import com.zj.api.downloader.SimpleDownloadListener
 import com.zj.api.interfaces.RequestCancelable
 import com.zj.api.utils.LoggerInterface
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 
+@Suppress("unused")
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var tv: TextView
     private val testService: TestService
         get() {
             return ZApi.create(TestService::class.java, ApiErrorHandler).baseUrl(Constance.getBaseUrl()).header(Constance.getHeader()).build()
@@ -24,14 +25,14 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        tv = findViewById(R.id.tv)
         ZApi.setLoggerInterface(TestService::class.java, object : LoggerInterface {
             override fun onSizeParsed(fromCls: String, isSend: Boolean, size: Long) {
                 Log.e("------", "from :$fromCls , onSizeParsed in thread : ${Thread.currentThread().name}: isSend = $isSend , size = $size")
             }
         })
 
-        tv?.setOnClickListener {
+        tv.setOnClickListener {
             requestByCoroutineTest()
         }
     }
@@ -46,12 +47,12 @@ class MainActivity : AppCompatActivity() {
         ZApi.download(f, url, object : SimpleDownloadListener() {
             override fun onCompleted(absolutePath: String) {
                 runOnUiThread {
-                    tv?.text = absolutePath
+                    tv.text = absolutePath
                 }
             }
 
             override fun onError(e: Throwable?, isCanceled: Boolean) {
-                runOnUiThread { tv?.text = e?.message }
+                runOnUiThread { tv.text = e?.message }
                 e?.printStackTrace()
             }
         })
@@ -66,7 +67,7 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val s = testService.getIpCour("zh-cn")
             Log.e("------", "$s")
-            tv?.text = "$s"
+            tv.text = "$s"
         }
     }
 
@@ -75,9 +76,8 @@ class MainActivity : AppCompatActivity() {
         testService.getIp("zh-cn").call(this) { isSuccess, data, throwable ->
             val s = "$isSuccess :  ${data.toString()}   $throwable"
             Log.e("------", s)
-            tv?.text = s
+            tv.text = s
         }
-        Log.e("------", "11111")
     }
 
     private fun requestTestByCancelAbleObserver() {
@@ -85,7 +85,7 @@ class MainActivity : AppCompatActivity() {
         compo = testService.getIp("zh-cn").call { isSuccess, data, throwable ->
             val s = "$isSuccess :  ${data.toString()}   $throwable"
             Log.e("------", s)
-            tv?.text = s
+            tv.text = s
             compo?.cancel()
         }
     }
