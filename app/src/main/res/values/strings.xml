@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">Api</string>
+    <string name="download">ZApi.download</string>
+    <string name="key">key</string>
+    <string name="value">value</string>
+    <string name="set_new_url">set new url</string>
+    <string name="add_new_header">add new header</string>
+    <string name="clear_headers">clear_headers</string>
+    <string name="request_by_callback">request by CallBack with lifecycle</string>
+    <string name="request_by_callback_cancelable">request by CallBack returned cancelable</string>
+    <string name="download_hint">code : \n\t\tZApi.download(file, url, object : SimpleDownloadListener() { \n\t\t\t\t override fun onCompleted(absolutePath: String) {\n\t\t\t\t }\n\t\t\t\t…\n}</string>
+    <string name="request_by_coroutine_hint">code : \n\t\tlifecycleScope.launch { \n\t\t\t\t val result = testService.getIpCour(\"zh-cn\")\n\t\t}</string>
+    <string name="request_by_callback_hint_lo">code : \n\t\ttestService.getIp(\"zh-cn\").call(lifecycleOwner) { isSuccess, data, throwable -> \n\t\t\t\t do something\n\t\t}</string>
+    <string name="request_by_callback_hint">code : \n\t\tRequestCancelable compo = testService.getIp(\"zh-cn\").call(this) { isSuccess, data, throwable -> \n\t\t\t\t do something\n\t\t}</string>
+    <string name="request_by_coroutine">request by Coroutine</string>
 </resources>

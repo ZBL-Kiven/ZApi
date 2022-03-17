@@ -2,6 +2,7 @@ package com.zj.apiTest
 
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -16,7 +17,6 @@ import java.io.File
 @Suppress("unused")
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var tv: TextView
     private val testService: TestService
         get() {
             return ZApi.create(TestService::class.java, ApiErrorHandler).baseUrl(Constance.getBaseUrl()).header(Constance.getHeader()).build()
@@ -25,67 +25,61 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        tv = findViewById(R.id.tv)
         ZApi.setLoggerInterface(TestService::class.java, object : LoggerInterface {
             override fun onSizeParsed(fromCls: String, isSend: Boolean, size: Long) {
                 Log.e("------", "from :$fromCls , onSizeParsed in thread : ${Thread.currentThread().name}: isSend = $isSend , size = $size")
             }
         })
-
-        tv.setOnClickListener {
-            requestByCoroutineTest()
-        }
     }
 
     /**
      * 使用 ZApi 下载远程文件
      * */
-    private fun downloadTest() {
-
-        val f = File(externalCacheDir, "11221.aac")
-        val url = "https://media.clipclaps.com/a/20211123/a/7/b/a7b04cef4dc74f8d9c9cb927b0752ba5.aac"
+    fun downloadTest(v: View) {
+        v as TextView
+        val f = File(externalCacheDir, "ZApi_download_test.png")
+        val url = "https://github.com/ZBL-Kiven/BaseApi/tree/master/raw/title_screen.png"
         ZApi.download(f, url, object : SimpleDownloadListener() {
             override fun onCompleted(absolutePath: String) {
                 runOnUiThread {
-                    tv.text = absolutePath
+                    v.text = absolutePath
                 }
             }
 
             override fun onError(e: Throwable?, isCanceled: Boolean) {
-                runOnUiThread { tv.text = e?.message }
+                runOnUiThread { v.text = e?.message }
                 e?.printStackTrace()
             }
         })
     }
 
-    /**
-     *
-     *
-     *
-     * */
-    private fun requestByCoroutineTest() {
+
+    fun requestByCoroutineTest(v: View) {
+        v as TextView
         lifecycleScope.launch {
             val s = testService.getIpCour("zh-cn")
             Log.e("------", "$s")
-            tv.text = "$s"
+            v.text = "$s"
         }
     }
 
-    private fun requestTestByObserver() {
+    fun requestTestByObserver(v: View) {
+        v as TextView
         Log.e("------", "0000  ")
         testService.getIp("zh-cn").call(this) { isSuccess, data, throwable ->
             val s = "$isSuccess :  ${data.toString()}   $throwable"
             Log.e("------", s)
-            tv.text = s
+            v.text = s
         }
     }
 
-    private fun requestTestByCancelAbleObserver() {
+    fun requestTestByCancelAbleObserver(v: View) {
+        v as TextView
         var compo: RequestCancelable? = null
         compo = testService.getIp("zh-cn").call { isSuccess, data, throwable ->
             val s = "$isSuccess :  ${data.toString()}   $throwable"
             Log.e("------", s)
-            tv.text = s
+            v.text = s
             compo?.cancel()
         }
     }
