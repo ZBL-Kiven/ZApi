@@ -22,15 +22,21 @@ internal object LogUtils {
     fun onSizeParsed(fromCls: String, isSend: Boolean, size: Long) {
         try {
             lin[fromCls]?.onSizeParsed(fromCls, isSend, size)
+            globalStreamInterface?.onSizeParsed(fromCls, isSend, size)
         } catch (e: Exception) {
             this.e(e.message ?: "onSizeParsed error!")
         }
     }
 
     private val lin = hashMapOf<String, LoggerInterface>()
+    private var globalStreamInterface: LoggerInterface? = null
 
-    fun setByteSizeListener(cls: Class<*>, lin: LoggerInterface) {
+    fun setStreamingListener(cls: Class<*>, lin: LoggerInterface) {
         this.lin[cls.simpleName] = lin
+    }
+
+    fun setGlobalStreamingListener(global: LoggerInterface) {
+        this.globalStreamInterface = global
     }
 }
 

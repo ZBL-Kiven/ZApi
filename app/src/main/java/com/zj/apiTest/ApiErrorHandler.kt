@@ -17,7 +17,7 @@ object ApiErrorHandler : ErrorHandler {
         return super.interruptSuccessBody(data)
     }
 
-    override fun interruptErrorBody(throwable: Throwable?): Pair<Boolean, Any?> {
+    override fun interruptErrorBody(throwable: HttpException?): Pair<Boolean, Any?> {
         if (throwable is HttpException) {
             try {
                 val errorInfo = throwable.response()?.body()?.toString()

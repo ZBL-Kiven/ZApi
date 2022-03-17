@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        ZApi.setLoggerInterface(TestService::class.java, object : LoggerInterface {
+        ZApi.setFlowsListener(TestService::class.java, object : LoggerInterface {
             override fun onSizeParsed(fromCls: String, isSend: Boolean, size: Long) {
                 Log.e("------", "from :$fromCls , onSizeParsed in thread : ${Thread.currentThread().name}: isSend = $isSend , size = $size")
             }

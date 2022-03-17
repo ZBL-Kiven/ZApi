@@ -30,8 +30,13 @@ class ZApi {
 
     companion object : Consumer<Throwable> {
 
-        fun setLoggerInterface(cls: Class<*>, lin: LoggerInterface) {
-            LogUtils.setByteSizeListener(cls, lin)
+
+        fun setFlowsListener(cls: Class<*>, lin: LoggerInterface) {
+            LogUtils.setStreamingListener(cls, lin)
+        }
+
+        fun setGlobalFlowsListener(lin: LoggerInterface) {
+            LogUtils.setGlobalStreamingListener(lin)
         }
 
         init {

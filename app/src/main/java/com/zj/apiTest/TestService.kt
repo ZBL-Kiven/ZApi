@@ -18,6 +18,8 @@ interface TestService {
     @POST("/payerMaxApi/getOtherPayInfo")
     fun getOtherPayInfo(@Body lang: String): Observable<String?>
 
+
+    @Mock(MockTest::class)
     @GET("json/")
     fun getIp(@Query("lang") lang: String): Observable<Any>
 

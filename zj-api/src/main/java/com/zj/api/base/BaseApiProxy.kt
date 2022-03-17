@@ -38,7 +38,7 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
         return this
     }
 
-    fun globalMockAble(b: Boolean): BaseApiProxy<T, ERROR_HANDLER> {
+    fun mockAble(b: Boolean): BaseApiProxy<T, ERROR_HANDLER> {
         this.mockAble = b
         return this
     }
