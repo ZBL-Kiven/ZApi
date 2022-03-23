@@ -28,7 +28,7 @@ internal class CoroutineDataCall<F : Any?>(private val region: Call<F?>, private
             }
         }
         if (mockData != null) {
-            Constance.dealSuccessDataWithEh(errorHandler, mockData) {
+            Constance.dealSuccessDataWithEh(errorHandler, 200, mockData) {
                 val rsp = Response.success(200, it)
                 callback.onResponse(this@CoroutineDataCall, rsp)
             }
@@ -45,7 +45,7 @@ internal class CoroutineDataCall<F : Any?>(private val region: Call<F?>, private
                 val code = response.code()
                 if (response.isSuccessful && body != null) {
                     try {
-                        Constance.dealSuccessDataWithEh(errorHandler, body) {
+                        Constance.dealSuccessDataWithEh(errorHandler, code, body) {
                             val rsp = Response.success(response.code(), it)
                             callback.onResponse(this@CoroutineDataCall, rsp)
                         }

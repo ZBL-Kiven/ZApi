@@ -6,7 +6,7 @@ interface ErrorHandler {
 
     fun interruptErrorBody(throwable: ApiException?): Pair<Boolean, Any?>
 
-    fun <R> interruptSuccessBody(data: R?): R? {
+    fun <R> interruptSuccessBody(code: Int, data: R?): R? {
         return data
     }
 }

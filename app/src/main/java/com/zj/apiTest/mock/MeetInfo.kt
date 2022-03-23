@@ -2,35 +2,14 @@ package com.zj.apiTest.mock
 
 class MeetInfo {
 
-    enum class MeetStatus(var apiStatus: Int) {
-        PREPARING(0), PROGRESSING(1), ENDED(2)
-    }
-
-    var id: Int = 0
-
-    //会议状态 0-未开始,1-进行中,2-已结束
-    var status: Int = 0
-
-    //会议 Code
-    var meetingCode: String? = ""
-
-    //创建者id
-    var ownerId: Int = 0
-
-    //创建者名
-    var ownerName: String? = ""
-
-    //创建者形象
-    var ownerAvatar: String? = ""
-
     //主题
-    var name: String? = "asdasdasfasdasdasdfasd"
+    var name: String? = "1212312312312312312312313"
 
     //开始时间
-    var startTime: Long? = System.currentTimeMillis() + 100111
+    var startTime: Long? = 1648291650000
 
     //结束时间
-    var endTime: Long? = System.currentTimeMillis() + 100123141
+    var endTime: Long? = 1648291710000
 
     //有无秘钥
     var needSecret: Boolean = false

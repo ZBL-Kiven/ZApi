@@ -60,7 +60,7 @@ internal class CoroutineCall<F>(private val region: Call<F?>, private val errorH
     }
 
     private fun onSuccess(callback: Callback<SuspendObservable<F?>?>, code: Int, data: F?) {
-        Constance.dealSuccessDataWithEh(errorHandler, data) {
+        Constance.dealSuccessDataWithEh(errorHandler, code, data) {
             val rsp: Response<SuspendObservable<F?>?> = Response.success(code, SuspendObservable(it, null, null))
             callback.onResponse(this@CoroutineCall, rsp)
         }

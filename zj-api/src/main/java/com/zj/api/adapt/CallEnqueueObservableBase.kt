@@ -1,7 +1,9 @@
 package com.zj.api.adapt
 
 import com.zj.api.base.BaseErrorHandlerObservable
+import com.zj.api.exception.ApiException
 import com.zj.api.interfaces.ErrorHandler
+import com.zj.api.interfaces.ResponseHandler
 import com.zj.api.utils.Constance
 import io.reactivex.Observer
 import io.reactivex.disposables.Disposable
@@ -12,17 +14,17 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-internal class CallEnqueueObservableBase<T>(private val originalCall: Call<T?>, errorHandler: ErrorHandler?, private val preError: Throwable?, private val mockData: T?) : BaseErrorHandlerObservable<Response<T?>?>(errorHandler) {
+internal class CallEnqueueObservableBase<T>(private val originalCall: Call<T?>, errorHandler: ErrorHandler?, private val preError: Throwable?, private val mockData: T?) : BaseErrorHandlerObservable<Response<T?>?>(errorHandler), ResponseHandler<T?, Observer<in Response<T?>?>> {
 
     override fun subscribeActual(observer: Observer<in Response<T?>?>) {
         if (mockData != null) {
-            Constance.dealSuccessDataWithEh(errorHandler, mockData) {
-                observer.onNext(Response.success(200, it))
+            Constance.dealSuccessDataWithEh(errorHandler, 200, mockData) {
+                onSuccess(200, it, observer)
             }
             return
         }
         if (preError != null) {
-            Constance.dealExceptionWithEhForObservers(errorHandler, preError, 400, originalCall, observer)
+            dealError(originalCall, observer, preError)
             return
         }
         val call = originalCall.clone()
@@ -39,9 +41,7 @@ internal class CallEnqueueObservableBase<T>(private val originalCall: Call<T?>, 
         override fun onResponse(call: Call<T?>, response: Response<T?>) {
             if (disposed) return
             try {
-                Constance.dealSuccessDataWithEh(errorHandler, response.body()) {
-                    observer.onNext(Response.success(response.code(), it))
-                }
+                Constance.parseBodyResponse(response, observer, errorHandler, this@CallEnqueueObservableBase)
                 if (!disposed) {
                     terminated = true
                     observer.onComplete()
@@ -51,7 +51,7 @@ internal class CallEnqueueObservableBase<T>(private val originalCall: Call<T?>, 
                     RxJavaPlugins.onError(t)
                 } else if (!disposed) {
                     try {
-                        Constance.dealExceptionWithEhForObservers(errorHandler, t, response.code(), call, observer)
+                        dealError(call, observer, t)
                     } catch (inner: Throwable) {
                         Exceptions.throwIfFatal(inner)
                         RxJavaPlugins.onError(CompositeException(t, inner))
@@ -63,7 +63,7 @@ internal class CallEnqueueObservableBase<T>(private val originalCall: Call<T?>, 
         override fun onFailure(call: Call<T?>, t: Throwable) {
             if (call.isCanceled) return
             try {
-                Constance.dealExceptionWithEhForObservers(errorHandler, t, 400, call, observer)
+                dealError(call, observer, t)
             } catch (inner: Throwable) {
                 Exceptions.throwIfFatal(inner)
                 RxJavaPlugins.onError(CompositeException(t, inner))
@@ -77,6 +77,20 @@ internal class CallEnqueueObservableBase<T>(private val originalCall: Call<T?>, 
 
         override fun isDisposed(): Boolean {
             return disposed
+        }
+    }
+
+    override fun onSuccess(code: Int, content: T?, r: Observer<in Response<T?>?>) {
+        r.onNext(Response.success(code, content))
+    }
+
+    override fun onError(e: ApiException, handled: Any?, r: Observer<in Response<T?>?>) {
+        r.onError(HandledException(e, handled))
+    }
+
+    private fun dealError(call: Call<T?>, observer: Observer<in Response<T?>?>, t: Throwable) {
+        Constance.dealErrorWithEH(errorHandler, 400, call, t) { e, a ->
+            onError(e, a, observer)
         }
     }
 }

@@ -1,9 +1,8 @@
 package com.zj.api.utils
 
-import com.zj.api.adapt.HandledException
 import com.zj.api.exception.ApiException
 import com.zj.api.interfaces.ErrorHandler
-import io.reactivex.Observer
+import com.zj.api.interfaces.ResponseHandler
 import okhttp3.*
 import retrofit2.Call
 import retrofit2.HttpException
@@ -13,18 +12,71 @@ internal object Constance {
 
     const val HTTPS = "https"
 
-    private fun parseOrCreateHttpExceptionByCall(e: Throwable? = null, code: Int = 400, call: Call<*>): ApiException {
+    fun <T, R> parseBodyResponse(response: Response<T?>, handler: R, errorHandler: ErrorHandler?, rh: ResponseHandler<T?, R>) {
+        val body = response.body()
+        val code = response.code()
+        if (body != null) {
+            dealSuccessDataWithEh(errorHandler, code, body) {
+                rh.onSuccess(code, it, handler)
+            }
+        }
+        if (response.errorBody() != null) {
+            val httpException = HttpException(response)
+            dealErrorWithEH(errorHandler, code, response, httpException) { e, a ->
+                rh.onError(e, a, handler)
+            }
+        }
+    }
+
+    fun <R> dealSuccessDataWithEh(errorHandler: ErrorHandler?, code: Int, body: R?, done: (R?) -> Unit) {
+        if (errorHandler == null) {
+            done(body)
+            return
+        }
+        done(errorHandler.interruptSuccessBody(code, body))
+    }
+
+    private fun <T> dealErrorWithEH(eh: ErrorHandler?, code: Int, response: Response<T>, e: Throwable, done: (ApiException, Any?) -> Unit) {
+        val url = response.raw().request().url().toString()
+        val headers = mutableMapOf<String, String>()
+        response.raw().request().headers().toMultimap().forEach { (t, u) ->
+            headers[t] = u.joinToString { it }
+        }
+        val he = parseOrCreateHttpExceptionByCall(e, code, url, headers)
+        if (eh == null) {
+            done(he, null)
+            return
+        }
+        val p = eh.interruptErrorBody(he)
+        if (!p.first || p.second != null) {
+            done(he, p.second)
+        }
+    }
+
+    fun <T> dealErrorWithEH(eh: ErrorHandler?, code: Int, call: Call<T>, e: Throwable, done: (ApiException, Any?) -> Unit) {
+        val url = call.request().url().toString()
+        val headers = mutableMapOf<String, String>()
+        call.request().headers().toMultimap().forEach { (t, u) ->
+            headers[t] = u.joinToString { it }
+        }
+        val he = parseOrCreateHttpExceptionByCall(e, code, url, headers)
+        if (eh == null) {
+            done(he, null)
+            return
+        }
+        val p = eh.interruptErrorBody(he)
+        if (!p.first || p.second != null) {
+            done(he, p.second)
+        }
+    }
+
+    private fun parseOrCreateHttpExceptionByCall(e: Throwable? = null, code: Int = 400, url: String?, headers: Map<String, String>?): ApiException {
         return when (e) {
             is HttpException -> {
                 return ApiException(e, e)
             }
             is ApiException -> e
             else -> {
-                val url = call.request().url().toString()
-                val headers = mutableMapOf<String, String>()
-                call.request().headers().toMultimap().forEach { (t, u) ->
-                    headers[t] = u.joinToString { it }
-                }
                 parseOrCreateHttpException(url, headers, e, code)
             }
         }
@@ -38,37 +90,5 @@ internal object Constance {
             HttpException(Response.error<ResponseBody>(responseBody, raw))
         }
         return ApiException(httpException, throwable)
-    }
-
-    fun <R> dealSuccessDataWithEh(errorHandler: ErrorHandler?, body: R?, done: (R?) -> Unit) {
-        if (errorHandler == null) {
-            done(body)
-            return
-        }
-        done(errorHandler.interruptSuccessBody(body))
-    }
-
-    fun <R, O> dealExceptionWithEhForObservers(errorHandler: ErrorHandler?, t: Throwable, code: Int, call: Call<R?>, observer: Observer<in O?>) {
-        if (errorHandler == null) {
-            observer.onError(t)
-            return
-        }
-        val e = parseOrCreateHttpExceptionByCall(t, code, call)
-        val p = errorHandler.interruptErrorBody(e)
-        if (!p.first || p.second != null) {
-            observer.onError(HandledException(e, p.second))
-        }
-    }
-
-    fun <F> dealErrorWithEH(eh: ErrorHandler?, code: Int, call: Call<F?>, e: Throwable, done: (ApiException, Any?) -> Unit) {
-        val he = parseOrCreateHttpExceptionByCall(e, code, call)
-        if (eh == null) {
-            done(he, null)
-            return
-        }
-        val p = eh.interruptErrorBody(he)
-        if (!p.first || p.second != null) {
-            done(he, p.second)
-        }
     }
 }
