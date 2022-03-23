@@ -6,6 +6,7 @@ import com.zj.api.interceptor.HeaderProvider
 import com.zj.api.interceptor.UrlProvider
 import com.zj.api.interfaces.ApiFactory
 import com.zj.api.interfaces.ErrorHandler
+import com.zj.api.utils.LogUtils
 import io.reactivex.Observer
 import java.io.InputStream
 
@@ -45,6 +46,7 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
 
     fun debugAble(b: Boolean): BaseApiProxy<T, ERROR_HANDLER> {
         this.debugAble = b
+        LogUtils.debugAble = debugAble
         return this
     }
 

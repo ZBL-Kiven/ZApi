@@ -1,15 +1,13 @@
 package com.zj.api.utils
 
 import android.util.Log
-import com.zj.api.BuildConfig
-import java.lang.Exception
 
 @Suppress("unused")
 internal object LogUtils {
 
-    private val debugAble; get() = BuildConfig.DEBUG
+    var debugAble = true
 
-    private const val TAG = " base.api ==> "
+    private const val TAG = "zj.api ==> "
 
     fun d(s: String) {
         if (debugAble) Log.d(TAG, s)
