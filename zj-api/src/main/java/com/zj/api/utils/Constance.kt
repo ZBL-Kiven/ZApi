@@ -14,13 +14,19 @@ internal object Constance {
     const val HTTPS = "https"
 
     private fun parseOrCreateHttpExceptionByCall(e: Throwable? = null, code: Int = 400, call: Call<*>): ApiException {
-        return if (e is ApiException) e else {
-            val url = call.request().url().toString()
-            val headers = mutableMapOf<String, String>()
-            call.request().headers().toMultimap().forEach { (t, u) ->
-                headers[t] = u.joinToString { it }
+        return when (e) {
+            is HttpException -> {
+                return ApiException(e, e)
             }
-            parseOrCreateHttpException(url, headers, e, code)
+            is ApiException -> e
+            else -> {
+                val url = call.request().url().toString()
+                val headers = mutableMapOf<String, String>()
+                call.request().headers().toMultimap().forEach { (t, u) ->
+                    headers[t] = u.joinToString { it }
+                }
+                parseOrCreateHttpException(url, headers, e, code)
+            }
         }
     }
 
