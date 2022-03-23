@@ -1,5 +1,5 @@
 package com.zj.api.coroutine
 
-import retrofit2.HttpException
+import com.zj.api.exception.ApiException
 
-data class SuspendObservable<F>(val data: F?, val error: HttpException? = null, val fromErrorHandler: Any?)
+data class SuspendObservable<F>(val data: F?, val error: ApiException? = null, val fromErrorHandler: Any?)

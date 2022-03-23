@@ -9,6 +9,7 @@ import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import javax.net.ssl.*
 
+@SuppressLint("CustomX509TrustManager")
 object TrustAllCerts : X509TrustManager {
 
     @SuppressLint("TrustAllX509TrustManager")

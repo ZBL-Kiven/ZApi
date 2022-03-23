@@ -74,8 +74,7 @@ class MainActivity : AppCompatActivity() {
 
     fun requestTestByObserver(v: View) {
         v as TextView
-        Log.e("------", "0000  ")
-        testService.getIp("zh-cn").call(this) { isSuccess, data, throwable, handled ->
+        testService.createMeeting().call(this) { isSuccess, data, throwable, handled ->
             val s = "$isSuccess :  ${data.toString()}   $throwable"
             Log.e("------", s)
             v.text = s

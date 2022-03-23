@@ -1,11 +1,10 @@
 package com.zj.api.interfaces
 
-import retrofit2.HttpException
-
+import com.zj.api.exception.ApiException
 
 interface ErrorHandler {
 
-    fun interruptErrorBody(throwable: HttpException?): Pair<Boolean, Any?>
+    fun interruptErrorBody(throwable: ApiException?): Pair<Boolean, Any?>
 
     fun <R> interruptSuccessBody(data: R?): R? {
         return data

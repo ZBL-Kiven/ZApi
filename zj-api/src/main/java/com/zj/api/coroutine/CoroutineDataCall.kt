@@ -24,7 +24,7 @@ internal class CoroutineDataCall<F : Any?>(private val region: Call<F?>, private
 
         fun onError(code: Int, e: Throwable) {
             Constance.dealErrorWithEH(errorHandler, code, this@CoroutineDataCall, e) { error, s ->
-                LogUtils.e("CoroutineDataCall => Api(${region.request().url()}) using direct data request cannot return a error:\n\t${error.message()}\n\tHandled = ${s.toString()}\n\tUse @SuspendObservable<Foo> to get error messages when requested by a coroutine.")
+                LogUtils.e("CoroutineDataCall => Api(${region.request().url()}) using direct data request cannot return a error:\n\t${error.message}\n\tHandled = ${s.toString()}\n\tUse @SuspendObservable<Foo> to get error messages when requested by a coroutine.")
             }
         }
         if (mockData != null) {

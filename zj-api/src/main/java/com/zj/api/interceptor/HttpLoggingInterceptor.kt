@@ -3,23 +3,24 @@
 package com.zj.api.interceptor
 
 import com.zj.api.utils.LogUtils
-import java.io.EOFException
-import java.nio.charset.Charset
-import java.util.TreeSet
-import java.util.concurrent.TimeUnit
 import okhttp3.Headers
 import okhttp3.Interceptor
 import okhttp3.Response
 import okhttp3.internal.http.HttpHeaders
-import okhttp3.internal.platform.Platform
 import okio.Buffer
 import okio.GzipSource
+import java.io.EOFException
+import java.nio.charset.Charset
+import java.util.*
+import java.util.concurrent.TimeUnit
 
-import okhttp3.internal.platform.Platform.INFO
-
-class HttpLoggingInterceptor @JvmOverloads constructor(private val clsName: String, private val logger: ((message: String) -> Unit) = { message -> Platform.get().log(INFO, message, null) }) : Interceptor {
+class HttpLoggingInterceptor constructor(private val clsName: String) : Interceptor {
 
     @Volatile private var headersToRedact = emptySet<String>()
+
+    private val logger = { message: String ->
+        LogUtils.d(message)
+    }
 
     @Volatile private var level = Level.NONE
 
