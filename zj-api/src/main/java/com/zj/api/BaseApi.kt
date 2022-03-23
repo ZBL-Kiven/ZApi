@@ -9,6 +9,7 @@ import com.zj.api.base.BaseApiProxy
 import com.zj.api.base.RequestInCompo
 import com.zj.api.downloader.DownloadCompo
 import com.zj.api.downloader.DownloadListener
+import com.zj.api.exception.ApiException
 import com.zj.api.interfaces.ErrorHandler
 import com.zj.api.interfaces.RequestCancelable
 import com.zj.api.utils.LogUtils
@@ -20,7 +21,6 @@ import io.reactivex.functions.Consumer
 import io.reactivex.plugins.RxJavaPlugins
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
-import retrofit2.HttpException
 import java.io.File
 import java.lang.Exception
 import kotlin.coroutines.resume
@@ -82,27 +82,27 @@ class ZApi {
     }
 }
 
-fun <F> Observable<F>.call(lo: LifecycleOwner?, subscribe: ((isSuccess: Boolean, data: F?, throwable: HttpException?, errorHandlerResp: Any?) -> Unit)? = null): RequestCancelable {
+fun <F> Observable<F>.call(lo: LifecycleOwner?, subscribe: ((isSuccess: Boolean, data: F?, throwable: ApiException?, errorHandlerResp: Any?) -> Unit)? = null): RequestCancelable {
     return call(lo, Schedulers.io(), AndroidSchedulers.mainThread(), subscribe)
 }
 
-fun <F> Observable<F>.call(lo: LifecycleOwner?, subscribe: ((isSuccess: Boolean, data: F?, throwable: HttpException?) -> Unit)? = null): RequestCancelable {
-    return call(lo, Schedulers.io(), AndroidSchedulers.mainThread()) { isSuccess: Boolean, data: F?, throwable: HttpException?, _ ->
+fun <F> Observable<F>.call(lo: LifecycleOwner?, subscribe: ((isSuccess: Boolean, data: F?, throwable: ApiException?) -> Unit)? = null): RequestCancelable {
+    return call(lo, Schedulers.io(), AndroidSchedulers.mainThread()) { isSuccess: Boolean, data: F?, throwable: ApiException?, _ ->
         subscribe?.invoke(isSuccess, data, throwable)
     }
 }
 
-fun <F> Observable<F>.call(subscribeSchedulers: Scheduler = Schedulers.io(), observableSchedulers: Scheduler = AndroidSchedulers.mainThread(), subscribe: ((isSuccess: Boolean, data: F?, throwable: HttpException?) -> Unit)? = null): RequestCancelable {
-    return call(null, subscribeSchedulers, observableSchedulers) { isSuccess: Boolean, data: F?, throwable: HttpException?, _ ->
+fun <F> Observable<F>.call(subscribeSchedulers: Scheduler = Schedulers.io(), observableSchedulers: Scheduler = AndroidSchedulers.mainThread(), subscribe: ((isSuccess: Boolean, data: F?, throwable: ApiException?) -> Unit)? = null): RequestCancelable {
+    return call(null, subscribeSchedulers, observableSchedulers) { isSuccess: Boolean, data: F?, throwable: ApiException?, _ ->
         subscribe?.invoke(isSuccess, data, throwable)
     }
 }
 
-fun <F> Observable<F>.call(subscribeSchedulers: Scheduler = Schedulers.io(), observableSchedulers: Scheduler = AndroidSchedulers.mainThread(), subscribe: ((isSuccess: Boolean, data: F?, throwable: HttpException?, errorHandlerResp: Any?) -> Unit)? = null): RequestCancelable {
+fun <F> Observable<F>.call(subscribeSchedulers: Scheduler = Schedulers.io(), observableSchedulers: Scheduler = AndroidSchedulers.mainThread(), subscribe: ((isSuccess: Boolean, data: F?, throwable: ApiException?, errorHandlerResp: Any?) -> Unit)? = null): RequestCancelable {
     return call(null, subscribeSchedulers, observableSchedulers, subscribe)
 }
 
-fun <F> Observable<F>.call(lo: LifecycleOwner?, subscribeSchedulers: Scheduler = Schedulers.io(), observableSchedulers: Scheduler = AndroidSchedulers.mainThread(), subscribe: ((isSuccess: Boolean, data: F?, throwable: HttpException?, errorHandlerResp: Any?) -> Unit)? = null): RequestCancelable {
+fun <F> Observable<F>.call(lo: LifecycleOwner?, subscribeSchedulers: Scheduler = Schedulers.io(), observableSchedulers: Scheduler = AndroidSchedulers.mainThread(), subscribe: ((isSuccess: Boolean, data: F?, throwable: ApiException?, errorHandlerResp: Any?) -> Unit)? = null): RequestCancelable {
 
     suspend fun suspendReq() = suspendCancellableCoroutine<F?> { scc ->
         RequestInCompo(this, subscribeSchedulers, observableSchedulers, { data ->
@@ -141,14 +141,14 @@ fun <F> Observable<F>.call(lo: LifecycleOwner?, subscribeSchedulers: Scheduler =
     })
 }
 
-private fun <F> dealError(throwable: Throwable?, subscribe: ((Boolean, F?, HttpException?, Any?) -> Unit)?) {
+private fun <F> dealError(throwable: Throwable?, subscribe: ((Boolean, F?, ApiException?, Any?) -> Unit)?) {
     var er = throwable
     var hd: Any? = null
     if (throwable is HandledException) {
         er = throwable.raw
         hd = throwable.handledData
     }
-    if (er is HttpException) {
-        subscribe?.invoke(er.code() == 204, null, er, hd)
+    if (er is ApiException) {
+        subscribe?.invoke(er.httpException?.code() == 204, null, er, hd)
     }
 }

@@ -75,7 +75,7 @@ class MainActivity : AppCompatActivity() {
     fun requestTestByObserver(v: View) {
         v as TextView
         testService.createMeeting().call(this) { isSuccess, data, throwable, handled ->
-            val s = "$isSuccess :  ${data.toString()}   $throwable"
+            val s = "$isSuccess :  ${data.toString()}   ${throwable?.message}"
             Log.e("------", s)
             v.text = s
         }
@@ -85,7 +85,7 @@ class MainActivity : AppCompatActivity() {
         v as TextView
         var compo: RequestCancelable? = null
         compo = testService.getIp("zh-cn").call { isSuccess, data, throwable, handled ->
-            val s = "$isSuccess :  ${data.toString()}   $throwable"
+            val s = "$isSuccess :  ${data.toString()}   ${throwable?.message}"
             Log.e("------", s)
             v.text = s
             compo?.cancel()

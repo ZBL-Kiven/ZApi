@@ -12,7 +12,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.io.InputStream
 
 internal class RetrofitFactory<T>(
-    private val creatable: Throwable?,
     private val clsName: String,
     private val timeout: Long,
     private val header: MutableMap<String, String>?,
@@ -43,7 +42,7 @@ internal class RetrofitFactory<T>(
 
     fun createService(cls: Class<T>): T {
         val service = factory.createService(mRetrofit, cls)
-        val e = if (creatable == null) null else parseOrCreateHttpException(urlProvider?.url(), header, preError)
+        val e = if (preError == null) null else parseOrCreateHttpException(urlProvider?.url(), header, preError)
         getCallAdapterFactory.preError = e
         return service
     }

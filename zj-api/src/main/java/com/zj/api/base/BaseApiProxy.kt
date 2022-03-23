@@ -7,7 +7,6 @@ import com.zj.api.interceptor.UrlProvider
 import com.zj.api.interfaces.ApiFactory
 import com.zj.api.interfaces.ErrorHandler
 import com.zj.api.utils.LogUtils
-import io.reactivex.Observer
 import java.io.InputStream
 
 class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Class<T>, private val handler: ERROR_HANDLER? = null) {
@@ -67,6 +66,6 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
         } catch (e: java.lang.Exception) {
             throwable = e
         }
-        return RetrofitFactory(throwable, clazz.simpleName, timeOut, map, baseUrl, certificate, factory ?: ApiFactory.Default(), debugAble, mockAble, handler, throwable)
+        return RetrofitFactory(clazz.simpleName, timeOut, map, baseUrl, certificate, factory ?: ApiFactory.Default(), debugAble, mockAble, handler, throwable)
     }
 }
