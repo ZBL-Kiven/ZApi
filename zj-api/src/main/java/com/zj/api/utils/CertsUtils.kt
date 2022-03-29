@@ -146,15 +146,16 @@ private fun chooseTrustManager(trustManagers: Array<TrustManager>): X509TrustMan
     return null
 }
 
+@SuppressLint("CustomX509TrustManager")
 private class UnSafeTrustManager : X509TrustManager {
     @Throws(CertificateException::class)
     override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {
-        LogUtils.d(chain.toString())
+        LogUtils.d("UnSafeTrustManager", chain.toString())
     }
 
     @Throws(CertificateException::class)
     override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {
-        LogUtils.d(chain.toString())
+        LogUtils.d("X509TrustManager", chain.toString())
     }
 
     override fun getAcceptedIssuers(): Array<X509Certificate> {
@@ -162,8 +163,8 @@ private class UnSafeTrustManager : X509TrustManager {
     }
 }
 
-private class MyTrustManager @Throws(NoSuchAlgorithmException::class, KeyStoreException::class)
-constructor(private val localTrustManager: X509TrustManager?) : X509TrustManager {
+@SuppressLint("CustomX509TrustManager")
+private class MyTrustManager @Throws(NoSuchAlgorithmException::class, KeyStoreException::class) constructor(private val localTrustManager: X509TrustManager?) : X509TrustManager {
     private val defaultTrustManager: X509TrustManager?
 
     init {
@@ -174,7 +175,7 @@ constructor(private val localTrustManager: X509TrustManager?) : X509TrustManager
 
     @Throws(CertificateException::class)
     override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {
-        LogUtils.d(chain.toString())
+        LogUtils.d("X509TrustManager-1", chain.toString())
     }
 
     @Throws(CertificateException::class)

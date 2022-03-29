@@ -1,8 +1,9 @@
-package com.zj.api.adapt
+package com.zj.api.call.observable
 
+import com.zj.api.adapt.AdapterPendingData
+import com.zj.api.adapt.HandledException
 import com.zj.api.base.BaseErrorHandlerObservable
 import com.zj.api.exception.ApiException
-import com.zj.api.interfaces.ErrorHandler
 import com.zj.api.interfaces.ResponseHandler
 import com.zj.api.utils.Constance
 import io.reactivex.Observer
@@ -13,17 +14,17 @@ import io.reactivex.plugins.RxJavaPlugins
 import retrofit2.Call
 import retrofit2.Response
 
-internal class CallExecuteObservableBase<T>(private val originalCall: Call<T?>, errorHandler: ErrorHandler?, private val preError: Throwable?, private val mockData: T?) : BaseErrorHandlerObservable<Response<T?>?>(errorHandler), ResponseHandler<T?, Observer<in Response<T?>?>> {
+internal class CallExecuteObservableBase<T>(private val originalCall: Call<T?>, pendingData: AdapterPendingData<T>) : BaseErrorHandlerObservable<Response<T?>?, T>(pendingData), ResponseHandler<T?, Observer<in Response<T?>?>> {
 
     override fun subscribeActual(observer: Observer<in Response<T?>?>) {
-        if (mockData != null) {
-            Constance.dealSuccessDataWithEh(errorHandler, 200, mockData) {
+        if (pendingData.mockData != null) {
+            Constance.dealSuccessDataWithEh(pendingData, 200, pendingData.mockData) {
                 onSuccess(200, it, observer)
             }
             return
         }
-        if (preError != null) {
-            Constance.dealErrorWithEH(errorHandler, 400, originalCall, preError) { e, a ->
+        if (pendingData.preError != null) {
+            Constance.dealErrorWithEH(pendingData, 400, originalCall, pendingData.preError) { e, a ->
                 onError(e, a, observer)
             }
             return
@@ -35,7 +36,7 @@ internal class CallExecuteObservableBase<T>(private val originalCall: Call<T?>, 
         try {
             val response = call.execute()
             if (!disposable.isDisposed) {
-                Constance.parseBodyResponse(response, observer, errorHandler, this)
+                Constance.parseBodyResponse(pendingData, response, observer, this)
             }
             if (!disposable.isDisposed) {
                 terminated = true
@@ -47,7 +48,7 @@ internal class CallExecuteObservableBase<T>(private val originalCall: Call<T?>, 
                 RxJavaPlugins.onError(t)
             } else if (!disposable.isDisposed) {
                 try {
-                    Constance.dealErrorWithEH(errorHandler, 400, call, t) { e, a ->
+                    Constance.dealErrorWithEH(pendingData, 400, call, t) { e, a ->
                         onError(e, a, observer)
                     }
                 } catch (inner: Throwable) {

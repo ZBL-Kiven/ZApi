@@ -19,7 +19,7 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
     @Volatile private var headersToRedact = emptySet<String>()
 
     private val logger = { message: String ->
-        LogUtils.d(message)
+        LogUtils.d(clsName, message)
     }
 
     @Volatile private var level = Level.NONE

@@ -1,6 +1,6 @@
-package com.zj.api.coroutine
+package com.zj.api.call.coroutine
 
-import com.zj.api.interfaces.ErrorHandler
+import com.zj.api.adapt.AdapterPendingData
 import com.zj.api.utils.Constance
 import okhttp3.*
 import okio.Timeout
@@ -10,10 +10,10 @@ import retrofit2.HttpException
 import retrofit2.Response
 import java.lang.IllegalArgumentException
 
-internal class CoroutineCall<F>(private val region: Call<F?>, private val errorHandler: ErrorHandler?, private val preError: Throwable?, private val mockData: F?) : Call<SuspendObservable<F?>?> {
+internal class CoroutineCall<F>(private val region: Call<F?>, private val pendingData: AdapterPendingData<F?>) : Call<SuspendObservable<F?>?> {
 
     override fun clone(): Call<SuspendObservable<F?>?> {
-        return CoroutineCall(region, errorHandler, preError, mockData)
+        return CoroutineCall(region, pendingData)
     }
 
     override fun execute(): Response<SuspendObservable<F?>?> {
@@ -21,12 +21,12 @@ internal class CoroutineCall<F>(private val region: Call<F?>, private val errorH
     }
 
     override fun enqueue(callback: Callback<SuspendObservable<F?>?>) {
-        if (mockData != null) {
-            onSuccess(callback, 200, mockData)
+        if (pendingData.mockData != null) {
+            onSuccess(callback, 200, pendingData.mockData)
             return
         }
-        if (preError != null) {
-            onError(callback, 400, preError)
+        if (pendingData.preError != null) {
+            onError(callback, 400, pendingData.preError)
             return
         }
         val cb = object : Callback<F?> {
@@ -53,14 +53,14 @@ internal class CoroutineCall<F>(private val region: Call<F?>, private val errorH
     }
 
     private fun onError(callback: Callback<SuspendObservable<F?>?>, code: Int, e: Throwable) {
-        Constance.dealErrorWithEH(errorHandler, code, region, e) { error, s ->
+        Constance.dealErrorWithEH(pendingData, code, region, e) { error, s ->
             val resp = SuspendObservable<F?>(null, error, s)
             callback.onResponse(this, Response.success(resp))
         }
     }
 
     private fun onSuccess(callback: Callback<SuspendObservable<F?>?>, code: Int, data: F?) {
-        Constance.dealSuccessDataWithEh(errorHandler, code, data) {
+        Constance.dealSuccessDataWithEh(pendingData, code, data) {
             val rsp: Response<SuspendObservable<F?>?> = Response.success(code, SuspendObservable(it, null, null))
             callback.onResponse(this@CoroutineCall, rsp)
         }

@@ -2,22 +2,26 @@
 
 package com.zj.api.base
 
+import com.zj.api.ZApi.Companion.mBaseTimeoutMills
 import com.zj.api.interceptor.HeaderProvider
 import com.zj.api.interceptor.UrlProvider
 import com.zj.api.interfaces.ApiFactory
-import com.zj.api.interfaces.ErrorHandler
+import com.zj.api.eh.ErrorHandler
 import com.zj.api.utils.LogUtils
 import java.io.InputStream
 
 class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Class<T>, private val handler: ERROR_HANDLER? = null) {
 
-    private var timeOut: Long = 10000
+    private var timeOut: Long = mBaseTimeoutMills
     private var header: HeaderProvider? = null
     private var baseUrl: UrlProvider? = null
     private var debugAble: Boolean = true
     private var mockAble: Boolean = true
     private var certificate: Array<InputStream>? = null
 
+    /**
+     * set request certificate
+     * */
     fun certificate(certificate: Array<InputStream>): BaseApiProxy<T, ERROR_HANDLER> {
         this.certificate = certificate
         return this
@@ -33,28 +37,56 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
         return this
     }
 
+    /**
+     * set a timeout for this ZApi builder , for all method created by this time in service.
+     * Ignore at , if you've presented @annotation[com.zj.api.eh.ApiHandler] and sat the timeout.
+     * */
     fun timeOut(timeOut: Long): BaseApiProxy<T, ERROR_HANDLER> {
         this.timeOut = timeOut
         return this
     }
 
+    /**
+     * The ErrorHandlerTimeOut property set here will take effect on all services containing ErrorHandler called by the initialized ZApi instance this time.
+     * @param timeOut When the service method fails, it will call back to ErrorHandler (if set),
+     * and wait for ErrorHandler to process and return the interception change result , if the waiting time is longer than this time,
+     * it is considered that the error processing has timed out, at this time,
+     * the subsequent processing steps of ErrorHandler will be ignored, and the error will be returned directly to the calling thread.
+     * @see [ErrorHandler.interruptErrorBody]
+     * */
+    fun errorHandlerTimeOut(timeOut: Long): BaseApiProxy<T, ERROR_HANDLER> {
+        this.timeOut = timeOut
+        return this
+    }
+
+    /**
+     * Whether to allow the initialized ZApi to use the Mock annotation. For the usage of Mock see @see [com.zj.api.mock.Mock]
+     * */
     fun mockAble(b: Boolean): BaseApiProxy<T, ERROR_HANDLER> {
         this.mockAble = b
         return this
     }
 
+    /**
+     * Whether to allow log printing, it is allowed by default.
+     * You can monitor real-time logs by setting [com.zj.api.utils.LoggerInterface].
+     * It does not affect the monitoring of network activities and traffic changes.
+     * */
     fun debugAble(b: Boolean): BaseApiProxy<T, ERROR_HANDLER> {
         this.debugAble = b
         LogUtils.debugAble = debugAble
         return this
     }
 
+    /**
+     * @param factory see [ApiFactory]
+     * */
     fun build(factory: ApiFactory<T>? = null): T {
         val retrofitFactory = createRetrofitFactory(factory)
         return retrofitFactory.createService(clazz)
     }
 
-    private fun createRetrofitFactory(factory: ApiFactory<T>?): RetrofitFactory<T> {
+    private fun createRetrofitFactory(factory: ApiFactory<T>?): BaseRfFactory<T> {
         val map = mutableMapOf<String, String>()
         var throwable: Throwable? = null
         try {
@@ -66,6 +98,6 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
         } catch (e: java.lang.Exception) {
             throwable = e
         }
-        return RetrofitFactory(clazz.simpleName, timeOut, map, baseUrl, certificate, factory ?: ApiFactory.Default(), debugAble, mockAble, handler, throwable)
+        return BaseRfFactory(clazz.simpleName, timeOut, map, baseUrl, certificate, factory ?: ApiFactory.Default(), debugAble, mockAble, handler, throwable)
     }
 }

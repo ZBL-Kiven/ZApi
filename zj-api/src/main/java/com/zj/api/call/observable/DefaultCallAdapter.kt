@@ -1,6 +1,6 @@
-package com.zj.api.adapt
+package com.zj.api.call.observable
 
-import com.zj.api.interfaces.ErrorHandler
+import com.zj.api.adapt.AdapterPendingData
 import io.reactivex.BackpressureStrategy
 import io.reactivex.Observable
 import io.reactivex.Scheduler
@@ -8,14 +8,14 @@ import java.lang.reflect.Type
 import retrofit2.Call
 import retrofit2.CallAdapter
 
-internal class DefaultCallAdapter<R>(private val responseType: Type, private val scheduler: Scheduler?, private val isAsync: Boolean, private val isResult: Boolean, private val isBody: Boolean, private val isFlowAble: Boolean, private val isSingle: Boolean, private val isMaybe: Boolean, private val isCompletable: Boolean, private val errorHandler: ErrorHandler?, private val preError: Throwable?, private val mockData: R?) : CallAdapter<R?, Any> {
+internal class DefaultCallAdapter<R>(private val responseType: Type, private val scheduler: Scheduler?, private val isAsync: Boolean, private val isResult: Boolean, private val isBody: Boolean, private val isFlowAble: Boolean, private val isSingle: Boolean, private val isMaybe: Boolean, private val isCompletable: Boolean, private val pendingData: AdapterPendingData<R?>) : CallAdapter<R?, Any> {
 
     override fun responseType(): Type {
         return responseType
     }
 
     override fun adapt(call: Call<R?>): Any {
-        val responseObservable = if (isAsync) CallEnqueueObservableBase(call, errorHandler, preError, mockData) else CallExecuteObservableBase(call, errorHandler, preError, mockData)
+        val responseObservable = if (isAsync) CallEnqueueObservableBase(call, pendingData) else CallExecuteObservableBase(call, pendingData)
         var observable: Observable<*>
         observable = when {
             isResult -> ResultObservable(responseObservable)

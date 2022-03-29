@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package com.zj.api.adapt
+package com.zj.api.call.observable
 
 import retrofit2.Response
 

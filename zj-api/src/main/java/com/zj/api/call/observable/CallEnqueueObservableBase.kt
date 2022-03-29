@@ -1,8 +1,9 @@
-package com.zj.api.adapt
+package com.zj.api.call.observable
 
+import com.zj.api.adapt.AdapterPendingData
+import com.zj.api.adapt.HandledException
 import com.zj.api.base.BaseErrorHandlerObservable
 import com.zj.api.exception.ApiException
-import com.zj.api.interfaces.ErrorHandler
 import com.zj.api.interfaces.ResponseHandler
 import com.zj.api.utils.Constance
 import io.reactivex.Observer
@@ -14,17 +15,17 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-internal class CallEnqueueObservableBase<T>(private val originalCall: Call<T?>, errorHandler: ErrorHandler?, private val preError: Throwable?, private val mockData: T?) : BaseErrorHandlerObservable<Response<T?>?>(errorHandler), ResponseHandler<T?, Observer<in Response<T?>?>> {
+internal class CallEnqueueObservableBase<T>(private val originalCall: Call<T?>, pendingData: AdapterPendingData<T>) : BaseErrorHandlerObservable<Response<T?>?, T>(pendingData), ResponseHandler<T?, Observer<in Response<T?>?>> {
 
     override fun subscribeActual(observer: Observer<in Response<T?>?>) {
-        if (mockData != null) {
-            Constance.dealSuccessDataWithEh(errorHandler, 200, mockData) {
+        if (pendingData.mockData != null) {
+            Constance.dealSuccessDataWithEh(pendingData, 200, pendingData.mockData) {
                 onSuccess(200, it, observer)
             }
             return
         }
-        if (preError != null) {
-            dealError(originalCall, observer, preError)
+        if (pendingData.preError != null) {
+            dealError(originalCall, observer, pendingData.preError)
             return
         }
         val call = originalCall.clone()
@@ -41,7 +42,7 @@ internal class CallEnqueueObservableBase<T>(private val originalCall: Call<T?>, 
         override fun onResponse(call: Call<T?>, response: Response<T?>) {
             if (disposed) return
             try {
-                Constance.parseBodyResponse(response, observer, errorHandler, this@CallEnqueueObservableBase)
+                Constance.parseBodyResponse(pendingData, response, observer, this@CallEnqueueObservableBase)
                 if (!disposed) {
                     terminated = true
                     observer.onComplete()
@@ -89,7 +90,7 @@ internal class CallEnqueueObservableBase<T>(private val originalCall: Call<T?>, 
     }
 
     private fun dealError(call: Call<T?>, observer: Observer<in Response<T?>?>, t: Throwable) {
-        Constance.dealErrorWithEH(errorHandler, 400, call, t) { e, a ->
+        Constance.dealErrorWithEH(pendingData, 400, call, t) { e, a ->
             onError(e, a, observer)
         }
     }

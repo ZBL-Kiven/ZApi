@@ -1,4 +1,4 @@
-package com.zj.api.adapt
+package com.zj.api.call.observable
 
 import io.reactivex.Observable
 import io.reactivex.Observer

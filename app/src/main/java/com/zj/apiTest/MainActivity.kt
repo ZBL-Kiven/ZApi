@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        ZApi.setFlowsListener(TestService::class.java, object : LoggerInterface {
+        ZApi.addFlowsListener(TestService::class.java, object : LoggerInterface {
             override fun onSizeParsed(fromCls: String, isSend: Boolean, size: Long) {
                 Log.e("------", "from :$fromCls , onSizeParsed in thread : ${Thread.currentThread().name}: isSend = $isSend , size = $size")
             }
@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity() {
         v as TextView
         lifecycleScope.launch {
             val obj = testService.getIpCourSimple("zh-cn")
-            Log.e("------", "$obj")
+            Log.d("------", "$obj")
             v.text = "$obj"
         }
     }
@@ -67,16 +67,16 @@ class MainActivity : AppCompatActivity() {
         v as TextView
         lifecycleScope.launch {
             val s = testService.getIpCour("zh-cn")
-            Log.e("------", "data = ${s?.data}  e = ${s?.error}   handled =  ${s?.fromErrorHandler}")
+            Log.d("------", "data = ${s?.data}  e = ${s?.error}   handled =  ${s?.fromErrorHandler} , thread = ${Thread.currentThread().name}")
             v.text = "$s"
         }
     }
 
     fun requestTestByObserver(v: View) {
         v as TextView
-        testService.createMeeting().call(this) { isSuccess, data, throwable, handled ->
+        testService.getIpMock("zh-cn").call(this) { isSuccess, data, throwable, handled ->
             val s = "$isSuccess :  ${data.toString()}   ${throwable?.message}"
-            Log.e("------", s)
+            Log.d("------", s)
             v.text = s
         }
     }
@@ -86,7 +86,7 @@ class MainActivity : AppCompatActivity() {
         var compo: RequestCancelable? = null
         compo = testService.getIp("zh-cn").call { isSuccess, data, throwable, handled ->
             val s = "$isSuccess :  ${data.toString()}   ${throwable?.message}"
-            Log.e("------", s)
+            Log.d("------", s)
             v.text = s
             compo?.cancel()
         }

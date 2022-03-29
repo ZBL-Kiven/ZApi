@@ -1,19 +1,22 @@
 package com.zj.apiTest
 
+import com.alibaba.fastjson.JSON
 import com.zj.api.exception.ApiException
-import com.zj.api.interfaces.ErrorHandler
+import com.zj.api.eh.ErrorHandler
 
-object ApiErrorHandler : ErrorHandler {
+object ApiErrorHandler : ErrorHandler() {
 
     class CusError {
         var code: Int = -1
-        var msg: String? = ""
+        var lang: String? = ""
+        var message: String? = ""
     }
 
-    override fun interruptErrorBody(throwable: ApiException?): Pair<Boolean, Any?> {
-        val e = CusError()
-        e.code = 1000
-        e.msg = "test delegate error body!"
-        return Pair(false, e)
+    override suspend fun interruptErrorBody(throwable: ApiException?): Pair<Boolean, Any?> {
+        val s = kotlin.runCatching {
+            throwable?.httpException?.response()?.errorBody()?.string()
+        }.getOrNull()
+        val e = kotlin.runCatching { JSON.parseObject(s, CusError::class.java) }.getOrNull()
+        return (Pair(false, e))
     }
 }

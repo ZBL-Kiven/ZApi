@@ -1,6 +1,6 @@
-package com.zj.api.coroutine
+package com.zj.api.call.coroutine
 
-import com.zj.api.interfaces.ErrorHandler
+import com.zj.api.adapt.AdapterPendingData
 import com.zj.api.utils.Constance
 import com.zj.api.utils.LogUtils
 import okhttp3.Request
@@ -10,10 +10,10 @@ import retrofit2.Callback
 import retrofit2.HttpException
 import retrofit2.Response
 
-internal class CoroutineDataCall<F : Any?>(private val region: Call<F?>, private val errorHandler: ErrorHandler?, private val preError: Throwable?, private val mockData: F?) : Call<F?> {
+internal class CoroutineDataCall<F : Any?>(private val region: Call<F?>, private val pendingData: AdapterPendingData<F?>) : Call<F?> {
 
     override fun clone(): Call<F?> {
-        return CoroutineDataCall(region, errorHandler, preError, mockData)
+        return CoroutineDataCall(region, pendingData)
     }
 
     override fun execute(): Response<F?> {
@@ -23,19 +23,19 @@ internal class CoroutineDataCall<F : Any?>(private val region: Call<F?>, private
     override fun enqueue(callback: Callback<F?>) {
 
         fun onError(code: Int, e: Throwable) {
-            Constance.dealErrorWithEH(errorHandler, code, this@CoroutineDataCall, e) { error, s ->
-                LogUtils.e("CoroutineDataCall => Api(${region.request().url()}) using direct data request cannot return a error:\n\t${error.message}\n\tHandled = ${s.toString()}\n\tUse @SuspendObservable<Foo> to get error messages when requested by a coroutine.")
+            Constance.dealErrorWithEH(pendingData, code, this@CoroutineDataCall, e) { error, s ->
+                LogUtils.e(pendingData.targetCls?.simpleName ?: "CoroutineDataCall", "CoroutineDataCall => Api(${region.request().url()}) using direct data request cannot return a error:\n\t${error.message}\n\tHandled = ${s.toString()}\n\tUse @SuspendObservable<Foo> to get error messages when requested by a coroutine.")
             }
         }
-        if (mockData != null) {
-            Constance.dealSuccessDataWithEh(errorHandler, 200, mockData) {
+        if (pendingData.mockData != null) {
+            Constance.dealSuccessDataWithEh(pendingData, 200, pendingData.mockData) {
                 val rsp = Response.success(200, it)
                 callback.onResponse(this@CoroutineDataCall, rsp)
             }
             return
         }
-        if (preError != null) {
-            onError(400, preError)
+        if (pendingData.preError != null) {
+            onError(400, pendingData.preError)
             return
         }
         val cb = object : Callback<F?> {
@@ -45,7 +45,7 @@ internal class CoroutineDataCall<F : Any?>(private val region: Call<F?>, private
                 val code = response.code()
                 if (response.isSuccessful && body != null) {
                     try {
-                        Constance.dealSuccessDataWithEh(errorHandler, code, body) {
+                        Constance.dealSuccessDataWithEh(pendingData, code, body) {
                             val rsp = Response.success(response.code(), it)
                             callback.onResponse(this@CoroutineDataCall, rsp)
                         }

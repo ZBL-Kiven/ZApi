@@ -7,14 +7,25 @@ internal object LogUtils {
 
     var debugAble = true
 
-    private const val TAG = "zj.api ==> "
+    private const val TAG = "ZApi.%s --> "
 
-    fun d(s: String) {
-        if (debugAble) Log.d(TAG, s)
+    fun d(target: String, s: String) {
+        if (debugAble) Log.d(String.format(TAG, target), s)
+        onLog(target, Log.DEBUG, s)
     }
 
-    fun e(s: String) {
-        if (debugAble) Log.e(TAG, s)
+    fun e(target: String, s: String) {
+        if (debugAble) Log.e(String.format(TAG, target), s)
+        onLog(target, Log.ERROR, s)
+    }
+
+    private fun onLog(target: String, level: Int, s: String) {
+        try {
+            lin[target]?.onLog(level, String.format(TAG, target), s)
+            globalStreamInterface?.onLog(level, String.format(TAG, target), s)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     fun onSizeParsed(fromCls: String, isSend: Boolean, size: Long) {
@@ -22,17 +33,23 @@ internal object LogUtils {
             lin[fromCls]?.onSizeParsed(fromCls, isSend, size)
             globalStreamInterface?.onSizeParsed(fromCls, isSend, size)
         } catch (e: Exception) {
-            this.e(e.message ?: "onSizeParsed error!")
+            this.e(fromCls, e.message ?: "onSizeParsed error!")
         }
     }
 
     private val lin = hashMapOf<String, LoggerInterface>()
     private var globalStreamInterface: LoggerInterface? = null
 
-    fun setStreamingListener(cls: Class<*>, lin: LoggerInterface) {
+    /**
+     * Add a traffic monitor to a Service
+     * */
+    fun addStreamingListener(cls: Class<*>, lin: LoggerInterface) {
         this.lin[cls.simpleName] = lin
     }
 
+    /**
+     * Set up traffic monitors for all services
+     * */
     fun setGlobalStreamingListener(global: LoggerInterface) {
         this.globalStreamInterface = global
     }
@@ -41,4 +58,6 @@ internal object LogUtils {
 interface LoggerInterface {
 
     fun onSizeParsed(fromCls: String, isSend: Boolean, size: Long)
+
+    fun onLog(level: Int, tag: String, s: String) {}
 }
