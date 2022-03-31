@@ -7,7 +7,7 @@ internal object LogUtils {
 
     var debugAble = true
 
-    private const val TAG = "ZApi.%s --> "
+    private const val TAG = "ZApi.%s "
 
     fun d(target: String, s: String) {
         if (debugAble) Log.d(String.format(TAG, target), s)

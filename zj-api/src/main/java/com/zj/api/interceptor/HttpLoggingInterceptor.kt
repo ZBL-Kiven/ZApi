@@ -22,11 +22,7 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
         LogUtils.d(clsName, message)
     }
 
-    @Volatile private var level = Level.NONE
-
-    enum class Level {
-        NONE, BASIC, HEADERS, BODY
-    }
+    @Volatile private var level = LogLevel.NONE
 
     fun redactHeader(name: String) {
         val newHeadersToRedact = TreeSet(String.CASE_INSENSITIVE_ORDER)
@@ -36,38 +32,44 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
     }
 
     /** Change the level at which this interceptor logs.  */
-    fun setLevel(level: Level?): HttpLoggingInterceptor {
+    fun setLevel(level: LogLevel?): HttpLoggingInterceptor {
         if (level == null) throw NullPointerException("level == null. Use Level.NONE instead.")
         this.level = level
         return this
     }
 
-    fun getLevel(): Level {
+    fun getLevel(): LogLevel {
         return level
     }
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val level = this.level
-
         val request = chain.request()
-        if (level == Level.NONE) {
+        if (level.with == 0) {
             return chain.proceed(request)
         }
-
-        val logBody = level == Level.BODY
-        val logHeaders = logBody || level == Level.HEADERS
-
+        val logBasic = level.with.and(LogLevel.BASIC.with) != 0
+        val logBody = level.with.and(LogLevel.REQUEST_BODY.with) != 0
+        val logResultBody = level.with.and(LogLevel.RESULT_BODY.with) != 0
+        val logHeaders = level.with.and(LogLevel.HEADERS.with) != 0
         val requestBody = request.body()
         val hasRequestBody = requestBody != null
 
         val connection = chain.connection()
-        var requestStartMessage = ("--> " + request.method() + ' '.toString() + request.url() + if (connection != null) " " + connection.protocol() else "")
-        if (!logHeaders && hasRequestBody) {
-            requestStartMessage += " (" + requestBody?.contentLength() + "-byte body)"
+
+        //start
+        if (logBasic) {
+            logger.invoke(" ")
+            var requestStartMessage = ("===> " + request.method() + ' '.toString() + request.url() + if (connection != null) " " + connection.protocol() else "")
+            if (!logHeaders && hasRequestBody) {
+                requestStartMessage += " (" + requestBody?.contentLength() + "-byte body)"
+            }
+            logger.invoke(requestStartMessage)
         }
-        logger.invoke(requestStartMessage)
 
         if (logHeaders) {
+            logger.invoke(" ")
+            logger.invoke("------------------------------ headers start ----------------------------")
             if (hasRequestBody) { // Request body headers are only present when installed as a network interceptor. Force
                 // them to be included (when available) so there values are known.
                 if (requestBody?.contentType() != null) {
@@ -88,27 +90,30 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
                 }
                 i++
             }
-            logger.invoke("withClass: $clsName")
+            logger.invoke("------------------------------ headers end ----------------------------")
             if (!logBody || !hasRequestBody) {
-                logger.invoke("--> END " + request.method())
+                logger.invoke("===> END " + request.method())
             } else if (bodyHasUnknownEncoding(request.headers())) {
-                logger.invoke("--> END " + request.method() + " (encoded body omitted)")
+                logger.invoke("===> END " + request.method() + " (encoded body omitted)")
             } else {
+                logger.invoke(" ")
                 val buffer = Buffer()
                 requestBody?.writeTo(buffer)
-
                 var charset = UTF8 ?: Charset.defaultCharset()
                 val contentType = requestBody?.contentType()
                 if (contentType != null) {
                     charset = contentType.charset(UTF8)
                 }
-                logger.invoke("")
                 val contentLength = requestBody?.contentLength()
                 if (isPlaintext(buffer)) {
-                    logger.invoke(buffer.readString(charset))
-                    logger.invoke("--> END " + request.method() + " (" + contentLength + "-byte body)")
+                    if (logBody) {
+                        logger.invoke("------------------------------ body start ----------------------------")
+                        logger.invoke(buffer.readString(charset))
+                        logger.invoke("------------------------------ body end----------------------------")
+                    }
+                    logger.invoke("===> END " + request.method() + " (" + contentLength + "-byte body)")
                 } else {
-                    logger.invoke("--> END " + request.method() + " (binary " + requestBody?.contentLength() + "-byte body omitted)")
+                    logger.invoke("===> END " + request.method() + " (binary " + requestBody?.contentLength() + "-byte body omitted)")
                 }
                 LogUtils.onSizeParsed(clsName, true, contentLength ?: 0L)
             }
@@ -119,69 +124,73 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
         try {
             response = chain.proceed(request)
         } catch (e: Exception) {
-            logger.invoke("<-- HTTP FAILED: $e")
+            logger.invoke(" ")
+            logger.invoke("<=== HTTP FAILED: $e")
             throw e
         }
 
         val tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs)
-
         val responseBody = response.body() ?: return response
         val contentLength = responseBody.contentLength()
-        val bodySize = if (contentLength != -1L) "$contentLength-byte" else "unknown-length"
-        logger.invoke("<-- " + response.code() + (if (response.message().isEmpty()) "" else ' ' + response.message()) + ' '.toString() + response.request().url() + " (" + tookMs + "ms" + (if (!logHeaders) ", $bodySize body" else "") + ')'.toString())
 
-        if (logHeaders) {
-            val headers = response.headers()
+        if (logBasic) {
+            val bodySize = if (contentLength != -1L) "$contentLength-byte" else "unknown-length"
+            logger.invoke(" ")
+            logger.invoke("------------------------------ result ----------------------------")
+            logger.invoke("<=== " + response.code() + (if (response.message().isEmpty()) "" else ' ' + response.message()) + ' '.toString() + response.request().url() + " (" + tookMs + "ms" + (if (!logHeaders) ", $bodySize body" else "") + ')'.toString())
+        }
+        val headers = response.headers()
+        if (level.with.and(LogLevel.SERVER_HEADERS.with) != 0) {
+            logger.invoke("------------------------------ server headers start----------------------------")
             var i = 0
             val count = headers.size()
             while (i < count) {
                 logHeader(headers, i)
                 i++
             }
-            logger.invoke("withClass: $clsName")
-            if (!logBody || !HttpHeaders.hasBody(response)) {
-                logger.invoke("<-- END HTTP")
-            } else if (bodyHasUnknownEncoding(response.headers())) {
-                logger.invoke("<-- END HTTP (encoded body omitted)")
-            } else {
-                val source = responseBody.source()
-                source.request(java.lang.Long.MAX_VALUE) // Buffer the entire body.
-                var buffer = source.buffer
-                var gzippedLength: Long? = null
-                if ("gzip".equals(headers.get("Content-Encoding") ?: "", ignoreCase = true)) {
-                    gzippedLength = buffer.size()
-                    val buf = buffer.clone()
-                    GzipSource(buf).use { gzippedResponseBody ->
-                        buffer = Buffer()
-                        buffer.writeAll(gzippedResponseBody)
-                    }
-                }
-
-                var charset = UTF8
-                val contentType = responseBody.contentType()
-                if (contentType != null) {
-                    charset = contentType.charset(UTF8) ?: Charset.defaultCharset()
-                }
-
-                if (!isPlaintext(buffer)) {
-                    logger.invoke("")
-                    logger.invoke("<-- END HTTP (binary " + buffer.size() + "-byte body omitted)")
-                    return response
-                }
-
-                if (contentLength != 0L) {
-                    logger.invoke("")
-                    logger.invoke(buffer.clone().readString(charset))
-                }
-                val sendSize = buffer.size()
-                if (gzippedLength != null) {
-                    LogUtils.onSizeParsed(clsName, false, gzippedLength)
-                    logger.invoke("<-- END HTTP ($sendSize-byte, $gzippedLength-gzipped-byte body)")
-                } else {
-                    LogUtils.onSizeParsed(clsName, false, sendSize)
-                    logger.invoke("<-- END HTTP ($sendSize-byte body)")
+            logger.invoke("------------------------------ server headers end----------------------------")
+        }
+        if (!logResultBody || !HttpHeaders.hasBody(response)) {
+            logger.invoke("<=== END HTTP")
+        } else if (bodyHasUnknownEncoding(response.headers())) {
+            logger.invoke("<=== END HTTP (encoded body omitted)")
+        } else {
+            val source = responseBody.source()
+            source.request(java.lang.Long.MAX_VALUE) // Buffer the entire body.
+            var buffer = source.buffer
+            var gzippedLength: Long? = null
+            if ("gzip".equals(headers.get("Content-Encoding") ?: "", ignoreCase = true)) {
+                gzippedLength = buffer.size()
+                val buf = buffer.clone()
+                GzipSource(buf).use { gzippedResponseBody ->
+                    buffer = Buffer()
+                    buffer.writeAll(gzippedResponseBody)
                 }
             }
+
+            var charset = UTF8
+            val contentType = responseBody.contentType()
+            if (contentType != null) {
+                charset = contentType.charset(UTF8) ?: Charset.defaultCharset()
+            }
+            logger.invoke("------------------------------ response body start ----------------------------")
+            if (!isPlaintext(buffer)) {
+                logger.invoke("<=== END HTTP (binary " + buffer.size() + "-byte body omitted)")
+                return response
+            }
+            if (contentLength != 0L) {
+                logger.invoke(buffer.clone().readString(charset))
+            }
+            logger.invoke("------------------------------ response body end ----------------------------")
+            val sendSize = buffer.size()
+            if (gzippedLength != null) {
+                LogUtils.onSizeParsed(clsName, false, gzippedLength)
+                logger.invoke("<=== END HTTP ($sendSize-byte, $gzippedLength-gzipped-byte body)")
+            } else {
+                LogUtils.onSizeParsed(clsName, false, sendSize)
+                logger.invoke("<=== END HTTP ($sendSize-byte body)")
+            }
+            logger.invoke(" ")
         }
 
         return response
@@ -225,4 +234,16 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
             return (contentEncoding != null && !contentEncoding.equals("identity", ignoreCase = true) && !contentEncoding.equals("gzip", ignoreCase = true))
         }
     }
+}
+
+enum class LogLevel(internal var with: Int) {
+
+    NONE(0), SERVER_HEADERS(1 shl 2), HEADERS(1 shl 3), REQUEST_BODY(1 shl 4), BASIC(1 shl 5), RESULT_BODY(1 shl 6)
+}
+
+
+operator fun LogLevel.plus(other: LogLevel): LogLevel {
+    val r = LogLevel.NONE
+    r.with = with.or(other.with)
+    return r
 }

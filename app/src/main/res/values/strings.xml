@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Api</string>
     <string name="download">ZApi.download</string>
+    <string name="upload">ZApi.upload</string>
     <string name="key">key</string>
     <string name="value">value</string>
     <string name="set_new_url">set new url</string>

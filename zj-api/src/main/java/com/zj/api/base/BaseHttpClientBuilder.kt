@@ -2,6 +2,7 @@ package com.zj.api.base
 
 import com.zj.api.interceptor.HttpLoggingInterceptor
 import com.zj.api.interceptor.Interceptor
+import com.zj.api.interceptor.LogLevel
 import com.zj.api.interceptor.UrlProvider
 import com.zj.api.utils.TrustAllCerts
 import com.zj.api.utils.TrustAllHostnameVerifier
@@ -14,7 +15,7 @@ import java.util.concurrent.TimeUnit
 
 open class BaseHttpClientBuilder {
 
-    open fun getHttpClient(clsName: String, header: MutableMap<String, String>? = null, url: UrlProvider?, logAble: Boolean, timeout: Long, certificate: Array<InputStream>? = null): OkHttpClient {
+    open fun getHttpClient(clsName: String, header: MutableMap<String, String?>? = null, url: UrlProvider?, logAble: Boolean, timeout: Long, logLevel: LogLevel, certificate: Array<InputStream>? = null): OkHttpClient {
         val builder = OkHttpClient.Builder()
         builder.addInterceptor(Interceptor(header, url))
         builder.callTimeout(timeout, TimeUnit.MILLISECONDS)
@@ -25,7 +26,7 @@ open class BaseHttpClientBuilder {
         val sslTrustManager = TrustAllHostnameVerifier()
         builder.hostnameVerifier(sslTrustManager)
         if (logAble) {
-            builder.addInterceptor(HttpLoggingInterceptor(clsName).setLevel(HttpLoggingInterceptor.Level.BODY))
+            builder.addInterceptor(HttpLoggingInterceptor(clsName).setLevel(logLevel))
         }
         builder.protocols(Collections.unmodifiableList(listOf(Protocol.HTTP_1_1, Protocol.HTTP_2)))
         return builder.build()

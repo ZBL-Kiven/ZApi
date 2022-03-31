@@ -11,7 +11,7 @@ import java.nio.charset.Charset
 import java.util.*
 
 
-class Interceptor(private val header: MutableMap<String, String>? = null, private val urlProvider: UrlProvider?) : Interceptor {
+class Interceptor(private val header: MutableMap<String, String?>? = null, private val urlProvider: UrlProvider?) : Interceptor {
 
     companion object {
 
@@ -81,7 +81,7 @@ class Interceptor(private val header: MutableMap<String, String>? = null, privat
                 newBuilder.addHeader("charset", "utf-8")
             }
             it.forEach { e ->
-                newBuilder.addHeader(e.key, e.value)
+                e.value?.let { v -> newBuilder.addHeader(e.key, v) }
             }
         }
         return try {

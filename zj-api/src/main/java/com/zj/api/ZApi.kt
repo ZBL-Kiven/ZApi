@@ -9,11 +9,11 @@ import com.zj.api.base.BaseApiProxy
 import com.zj.api.base.RequestInCompo
 import com.zj.api.downloader.DownloadCompo
 import com.zj.api.downloader.DownloadListener
-import com.zj.api.exception.ApiException
 import com.zj.api.eh.ErrorHandler
-import com.zj.api.interceptor.UrlProvider
+import com.zj.api.exception.ApiException
 import com.zj.api.interfaces.RequestCancelable
-import com.zj.api.uploader.*
+import com.zj.api.uploader.task.MultiUploadBuilder
+import com.zj.api.uploader.task.UploadBuilder
 import com.zj.api.utils.LogUtils
 import com.zj.api.utils.LoggerInterface
 import io.reactivex.Observable
@@ -22,10 +22,10 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.functions.Consumer
 import io.reactivex.plugins.RxJavaPlugins
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.*
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
-import java.lang.Exception
-import java.net.URL
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -90,11 +90,16 @@ class ZApi {
          * */
 
         /**
-         * 下载文件
+         * download file
          * */
         fun download(target: File, url: String, listener: DownloadListener): DownloadCompo {
             return DownloadCompo(target, url, listener)
         }
+
+        val Uploader = UploadBuilder.Companion
+
+        val MultiUploader = MultiUploadBuilder.Companion
+
 
         override fun accept(t: Throwable?) {
             t?.printStackTrace()
@@ -127,13 +132,6 @@ fun <F> Observable<F>.call(subscribeSchedulers: Scheduler = Schedulers.io(), obs
 
 fun <F> Observable<F>.call(subscribeSchedulers: Scheduler = Schedulers.io(), observableSchedulers: Scheduler = AndroidSchedulers.mainThread(), subscribe: ((isSuccess: Boolean, data: F?, throwable: ApiException?, fromErrorHandler: Any?) -> Unit)? = null): RequestCancelable {
     return call(null, subscribeSchedulers, observableSchedulers, subscribe)
-}
-
-/**
- * 创建一个通用的 Post 上传 ，如果此上传方式无法满足你的需求，可以尝试更自由的创建方式 []。
- * */
-fun <F> Observable<F>.upload(observer: FileUploadListener){
-    UploadProxy()
 }
 
 /**

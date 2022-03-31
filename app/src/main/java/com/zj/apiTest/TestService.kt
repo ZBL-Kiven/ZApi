@@ -2,7 +2,6 @@ package com.zj.apiTest
 
 import com.zj.api.call.coroutine.SuspendObservable
 import com.zj.api.eh.ApiHandler
-import com.zj.api.eh.ErrorHandler
 import com.zj.api.mock.Mock
 import com.zj.apiTest.mock.MockTest
 import io.reactivex.Observable

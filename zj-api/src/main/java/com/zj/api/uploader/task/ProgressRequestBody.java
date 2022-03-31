@@ -1,4 +1,7 @@
-package com.zj.api.progress;
+package com.zj.api.uploader.task;
+
+import com.zj.api.progress.ProgressListener;
+import com.zj.api.uploader.FileInfo;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -13,14 +16,14 @@ import okio.Okio;
 import okio.Sink;
 
 @SuppressWarnings("unused")
-public class ProgressRequestBody extends RequestBody {
+class ProgressRequestBody extends RequestBody {
     private final RequestBody requestBody;
-    private final int fileIndex;
+    private final FileInfo info;
     private final ProgressListener mListener;
 
-    public ProgressRequestBody(RequestBody body, int fileIndex, ProgressListener listener) {
+    public ProgressRequestBody(RequestBody body, FileInfo info, ProgressListener listener) {
         this.requestBody = body;
-        this.fileIndex = fileIndex;
+        this.info = info;
         this.mListener = listener;
     }
 
@@ -64,7 +67,10 @@ public class ProgressRequestBody extends RequestBody {
             int progress = (int) ((bytesWritten * 1.0f / contentLength) * 100);
             if (Math.abs(lastProgress - progress) > 0) {
                 lastProgress = progress;
-                mListener.onProgress(fileIndex, progress, contentLength);
+                mListener.onProgress(info, progress, contentLength);
+            }
+            if (bytesWritten >= contentLength) {
+                mListener.onComplete(info, contentLength);
             }
         }
     }

@@ -1,98 +1,122 @@
-package com.zj.api.uploader
+@file:Suppress("unused")
+
+package com.zj.api.uploader.task
 
 import androidx.lifecycle.LifecycleOwner
 import com.zj.api.ZApi
 import com.zj.api.eh.ErrorHandler
 import com.zj.api.eh.LimitScope
+import com.zj.api.interceptor.HeaderProvider
 import com.zj.api.interceptor.UrlProvider
-import com.zj.api.uploader.task.MultiUploadTask
-import com.zj.api.uploader.task.UploadTask
-import io.reactivex.Observable
+import com.zj.api.uploader.FileInfo
+import com.zj.api.uploader.FileUploadListener
 import java.net.URL
 import java.util.*
 import kotlin.collections.ArrayList
 
-@Suppress("MemberVisibilityCanBePrivate", "unused")
-sealed class Builder<T>(internal val url: URL, internal val observable: Observable<T>) {
+open class UploadBody(
+    var lo: LifecycleOwner? = null,
+    var errorHandler: ErrorHandler? = null,
+    var scheduler: String = ZApi.MAIN,
+    var deleteCompressFile: Boolean = false,
+    var callId: String = UUID.randomUUID().toString(),
+    var headers: HeaderProvider? = null,
+    var params: MutableMap<String, String?> = mutableMapOf(),
+    var contentType: String = "multipart/form-data",
+)
 
-    internal var lo: LifecycleOwner? = null
-    internal var errorHandler: ErrorHandler? = null
-    internal var scheduler: String = ZApi.MAIN
-    internal var deleteCompressFile: Boolean = false
-    internal var callId: String = UUID.randomUUID().toString()
-    internal var headers: MutableMap<String, String>? = null
-    internal var params: Map<String, String?>? = null
-    internal var contentType: String = "multipart/form-data"
-    internal lateinit var uploadTask: UploadTask
-
-    fun contentType(contentType: String): Builder<T> {
-        this.contentType = contentType
-        return this
-    }
-
-    fun subscribeOn(@LimitScope scheduler: String): Builder<T> {
-        this.scheduler = scheduler
-        return this
-    }
-
-    fun addHeader(headers: MutableMap<String, String>): Builder<T> {
-        this.headers = headers
-        return this
-    }
-
-    fun callId(cid: String): Builder<T> {
-        this.callId = cid
-        return this
-    }
-
-    fun with(lo: LifecycleOwner?): Builder<T> {
-        this.lo = lo
-        return this
-    }
-
-    fun setErrorHandler(handler: ErrorHandler): Builder<T> {
-        this.errorHandler = handler
-        return this
-    }
-
-    fun deleteFileAfterUpload(isDelete: Boolean): Builder<T> {
-        this.deleteCompressFile = isDelete
-        return this
-    }
-
-    fun addParams(params: Map<String, String?>?): Builder<T> {
-        this.params = params
-        return this
-    }
+@Suppress("unused", "UNCHECKED_CAST")
+sealed class Builder<S>(internal val url: UrlProvider) : UploadBody() {
 
     internal open fun invalid() {
-        headers?.clear()
-        params = null
+        params.clear()
         callId = "-recycled-"
+    }
+
+    open fun contentType(contentType: String): S {
+        this@Builder.contentType = contentType
+        return this as S
+    }
+
+    open fun subscribeOn(@LimitScope scheduler: String): S {
+        this.scheduler = scheduler
+        return this as S
+    }
+
+    open fun header(headers: HeaderProvider?): S {
+        this.headers = headers
+        return this as S
+    }
+
+    open fun header(vararg h: Pair<String, String?>): S {
+        return header(mutableMapOf(*h))
+    }
+
+    open fun header(map: Map<String, String?>): S {
+        this.headers = HeaderProvider.createStatic(map)
+        return this as S
+    }
+
+    open fun callId(cid: String): S {
+        this.callId = cid
+        return this as S
+    }
+
+    open fun with(lo: LifecycleOwner?): S {
+        this.lo = lo
+        return this as S
+    }
+
+    open fun setErrorHandler(handler: ErrorHandler): S {
+        this.errorHandler = handler
+        return this as S
+    }
+
+    open fun deleteFileAfterUpload(isDelete: Boolean): S {
+        this.deleteCompressFile = isDelete
+        return this as S
+    }
+
+    open fun addParams(params: Map<String, String?>): S {
+        this.params.putAll(params)
+        return this as S
+    }
+
+    open fun addParams(vararg pair: Pair<String, String?>): S {
+        this.params.putAll(pair)
+        return this as S
     }
 }
 
-/**
- * 大多数情况下兼容使用，除非你使用非 Post 协议执行上传，或需要批量上传。
- * */
-class UploadBuilder<T> : Builder<T> {
+class UploadBuilder private constructor(url: UrlProvider) : Builder<UploadBuilder>(url) {
 
+    companion object {
 
+        @JvmStatic
+        fun with(url: UrlProvider): UploadBuilder {
+            return UploadBuilder(url)
+        }
 
-    internal constructor(url: UrlProvider, observable: Observable<T>) : super(URL(url.url()), observable)
+        @JvmStatic
+        fun with(url: URL): UploadBuilder {
+            return with(url.toString())
+        }
 
-    internal constructor(url: String, observable: Observable<T>) : super(URL(url), observable)
+        @JvmStatic
+        fun with(url: String): UploadBuilder {
+            return with(UrlProvider.createStatic(url))
+        }
+    }
 
     internal var fileInfo: FileInfo? = null
 
-    fun setFileInfo(info: FileInfo): Builder<T> {
+    fun setFileInfo(info: FileInfo): UploadBuilder {
         fileInfo = info
         return this
     }
 
-    fun start(observer: FileUploadListener): UploadTask {
-        uploadTask = UploadTask(this, observer)
-        return uploadTask
+    fun start(observer: FileUploadListener): SimpleUploadTask {
+        return SimpleUploadTask(this, observer)
     }
 
     override fun invalid() {
@@ -101,34 +125,44 @@ class UploadBuilder<T> : Builder<T> {
     }
 }
 
+class MultiUploadBuilder private constructor(url: UrlProvider) : Builder<MultiUploadBuilder>(url) {
 
-class MultiUploadBuilder<T> : Builder<T> {
+    companion object {
 
-    internal constructor(url: URL, observable: Observable<T>) : super(url, observable)
+        @JvmStatic
+        fun with(url: UrlProvider): MultiUploadBuilder {
+            return MultiUploadBuilder(url)
+        }
 
-    internal constructor(url: UrlProvider, observable: Observable<T>) : super(URL(url.url()), observable)
+        @JvmStatic
+        fun with(url: URL): MultiUploadBuilder {
+            return with(url.toString())
+        }
 
-    internal constructor(url: String, observable: Observable<T>) : super(URL(url), observable)
+        @JvmStatic
+        fun with(url: String): MultiUploadBuilder {
+            return with(UrlProvider.createStatic(url))
+        }
+    }
 
     internal var files: MutableList<FileInfo>? = mutableListOf()
 
-    fun setFiles(files: List<FileInfo>): Builder<T> {
+    fun setFiles(files: List<FileInfo>): MultiUploadBuilder {
         this.files = ArrayList(files)
         return this
     }
 
-    fun addFile(info: FileInfo): Builder<T> {
+    fun addFile(info: FileInfo): MultiUploadBuilder {
         this.files?.add(info)
         return this
     }
 
-    fun addFiles(vararg info: FileInfo): Builder<T> {
+    fun addFiles(vararg info: FileInfo): MultiUploadBuilder {
         this.files?.addAll(info)
         return this
     }
 
     fun start(observer: FileUploadListener): MultiUploadTask {
-        uploadTask = MultiUploadTask(this, observer)
-        return uploadTask
+        return MultiUploadTask(this, observer)
     }
 }

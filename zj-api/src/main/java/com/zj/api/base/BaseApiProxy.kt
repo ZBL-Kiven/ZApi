@@ -7,9 +7,12 @@ import com.zj.api.interceptor.HeaderProvider
 import com.zj.api.interceptor.UrlProvider
 import com.zj.api.interfaces.ApiFactory
 import com.zj.api.eh.ErrorHandler
+import com.zj.api.interceptor.LogLevel
+import com.zj.api.interceptor.plus
 import com.zj.api.utils.LogUtils
 import java.io.InputStream
 
+@Suppress("MemberVisibilityCanBePrivate")
 class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Class<T>, private val handler: ERROR_HANDLER? = null) {
 
     private var timeOut: Long = mBaseTimeoutMills
@@ -18,6 +21,7 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
     private var debugAble: Boolean = true
     private var mockAble: Boolean = true
     private var certificate: Array<InputStream>? = null
+    private var logLevel = LogLevel.HEADERS + LogLevel.BASIC + LogLevel.RESULT_BODY
 
     /**
      * set request certificate
@@ -32,7 +36,7 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
         return this
     }
 
-    fun header(header: HeaderProvider): BaseApiProxy<T, ERROR_HANDLER> {
+    fun header(header: HeaderProvider?): BaseApiProxy<T, ERROR_HANDLER> {
         this.header = header
         return this
     }
@@ -43,6 +47,18 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
      * */
     fun timeOut(timeOut: Long): BaseApiProxy<T, ERROR_HANDLER> {
         this.timeOut = timeOut
+        return this
+    }
+
+    /**
+     * Prerequisites the debugMod [debugAble] is allowed.
+     * set of the debug level of http logger , see [LogLevel]
+     * the level : NONE will clear the http logs.
+     * you can plus another one for merge. example SERVER_HEADERS + HEADERS + BODY
+     * @Default HEADERS & BASIC & RESULT_BODY
+     * */
+    fun logLevel(level: LogLevel): BaseApiProxy<T, ERROR_HANDLER> {
+        this.logLevel = level
         return this
     }
 
@@ -87,7 +103,7 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
     }
 
     private fun createRetrofitFactory(factory: ApiFactory<T>?): BaseRfFactory<T> {
-        val map = mutableMapOf<String, String>()
+        val map = mutableMapOf<String, String?>()
         var throwable: Throwable? = null
         try {
             header?.headers()?.let { map.putAll(it) }
@@ -98,6 +114,6 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
         } catch (e: java.lang.Exception) {
             throwable = e
         }
-        return BaseRfFactory(clazz.simpleName, timeOut, map, baseUrl, certificate, factory ?: ApiFactory.Default(), debugAble, mockAble, handler, throwable)
+        return BaseRfFactory(clazz.simpleName, timeOut, map, baseUrl, certificate, factory ?: ApiFactory.Default(), debugAble, mockAble, logLevel, handler, throwable)
     }
 }

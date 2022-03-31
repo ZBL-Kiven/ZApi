@@ -5,6 +5,24 @@ import java.net.URL
 
 abstract class UrlProvider {
 
+    companion object {
+        fun createStatic(s: String): UrlProvider {
+            return object : UrlProvider() {
+                override fun url(): String {
+                    return s
+                }
+            }
+        }
+
+        fun create(url: () -> String): UrlProvider {
+            return object : UrlProvider() {
+                override fun url(): String {
+                    return url.invoke()
+                }
+            }
+        }
+    }
+
     abstract fun url(): String
 
     internal fun getProxy(): UrlProxy {
@@ -27,5 +45,11 @@ abstract class UrlProvider {
             }
             host = url.host
         }
+    }
+}
+
+operator fun UrlProvider.plus(s: String): UrlProvider {
+    return UrlProvider.create {
+        this@plus.url() + s
     }
 }

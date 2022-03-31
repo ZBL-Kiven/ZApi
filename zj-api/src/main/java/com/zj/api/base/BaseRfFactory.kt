@@ -4,6 +4,7 @@ import com.zj.api.adapt.ZApiCallAdapterFactory
 import com.zj.api.interceptor.UrlProvider
 import com.zj.api.interfaces.ApiFactory
 import com.zj.api.eh.ErrorHandler
+import com.zj.api.interceptor.LogLevel
 import com.zj.api.utils.Constance.parseOrCreateHttpException
 import okhttp3.OkHttpClient
 import retrofit2.Converter
@@ -14,18 +15,19 @@ import java.io.InputStream
 internal class BaseRfFactory<T>(
     private val clsName: String,
     private val timeout: Long,
-    private val header: MutableMap<String, String>?,
+    private val header: MutableMap<String, String?>?,
     private val urlProvider: UrlProvider?,
     private val certificate: Array<InputStream>?,
     private val factory: ApiFactory<T>,
     private val debugAble: Boolean,
     private val mockAble: Boolean,
+    private val logLevel: LogLevel,
     private val errorHandler: ErrorHandler?,
     private val preError: Throwable?,
 ) {
 
     private val getOkHttpClient: OkHttpClient by lazy {
-        (factory.okHttpClient ?: BaseHttpClientBuilder()).getHttpClient(clsName, header, urlProvider, debugAble, timeout, certificate)
+        (factory.okHttpClient ?: BaseHttpClientBuilder()).getHttpClient(clsName, header, urlProvider, debugAble, timeout, logLevel, certificate)
     }
 
     private val getJsonConverter: Converter.Factory by lazy {

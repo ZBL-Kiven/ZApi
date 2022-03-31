@@ -1,3 +1,5 @@
 package com.zj.api.eh
 
-internal data class HandleScheduler(val successScope: String = ErrorHandler.MAIN, val errorScope: String, internal val id: String, val timeOut: Long)
+import com.zj.api.ZApi
+
+internal data class HandleScheduler(val successScope: String = ZApi.MAIN, val errorScope: String, internal val id: String, val timeOut: Long)
