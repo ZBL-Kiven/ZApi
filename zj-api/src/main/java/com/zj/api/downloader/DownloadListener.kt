@@ -2,11 +2,12 @@ package com.zj.api.downloader
 
 interface DownloadListener {
 
-    fun onStart() {}
+    suspend fun onStart() {}
 
-    fun onCompleted(absolutePath: String) {}
+    suspend fun onCompleted(absolutePath: String) {}
 
-    fun onProgress(progress: Int) {}
+    suspend fun onProgress(progress: Int) {}
 
-    fun onError(e: Throwable?, isCanceled: Boolean = false) {}
+    suspend fun onError(e: Throwable?, isCanceled: Boolean = false) {}
 }
+

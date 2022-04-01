@@ -1,9 +1,13 @@
 package com.zj.api.utils
 
 import android.os.Looper
+import android.util.Log
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.coroutineScope
 import com.zj.api.ZApi
 import com.zj.api.adapt.AdapterPendingData
 import com.zj.api.eh.ErrorHandler
+import com.zj.api.eh.LimitScope
 import com.zj.api.exception.ApiException
 import com.zj.api.interfaces.ResponseHandler
 import kotlinx.coroutines.*
@@ -135,5 +139,17 @@ internal object Constance {
             HttpException(Response.error<ResponseBody>(responseBody, raw))
         }
         return ApiException(id, httpException, throwable)
+    }
+
+    internal fun <T, R> withScheduler(t: T, @LimitScope scheduler: String, lo: LifecycleOwner?, od: suspend T.() -> R?) {
+        val s = when (scheduler) {
+            ZApi.CALCULATE -> Dispatchers.Default
+            ZApi.IO -> Dispatchers.IO
+            else -> Dispatchers.Main
+        }
+        val scope = lo?.lifecycle?.coroutineScope ?: CoroutineScope(s)
+        scope.launch {
+            od.invoke(t)
+        }
     }
 }

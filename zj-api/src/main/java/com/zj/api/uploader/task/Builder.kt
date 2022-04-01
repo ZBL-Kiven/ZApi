@@ -21,6 +21,7 @@ open class UploadBody(
     var deleteCompressFile: Boolean = false,
     var callId: String = UUID.randomUUID().toString(),
     var headers: HeaderProvider? = null,
+    var timeout: Long = 30000,
     var params: MutableMap<String, String?> = mutableMapOf(),
     var contentType: String = "multipart/form-data",
 )
@@ -29,6 +30,7 @@ open class UploadBody(
 sealed class Builder<S>(internal val url: UrlProvider) : UploadBody() {
 
     internal open fun invalid() {
+        lo = null
         params.clear()
         callId = "-recycled-"
     }
@@ -38,7 +40,7 @@ sealed class Builder<S>(internal val url: UrlProvider) : UploadBody() {
         return this as S
     }
 
-    open fun subscribeOn(@LimitScope scheduler: String): S {
+    open fun observerOn(@LimitScope scheduler: String): S {
         this.scheduler = scheduler
         return this as S
     }
@@ -62,12 +64,17 @@ sealed class Builder<S>(internal val url: UrlProvider) : UploadBody() {
         return this as S
     }
 
+    open fun timeout(t: Long): S {
+        this.timeout = t
+        return this as S
+    }
+
     open fun with(lo: LifecycleOwner?): S {
         this.lo = lo
         return this as S
     }
 
-    open fun setErrorHandler(handler: ErrorHandler): S {
+    open fun errorHandler(handler: ErrorHandler): S {
         this.errorHandler = handler
         return this as S
     }

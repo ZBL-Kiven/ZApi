@@ -44,6 +44,13 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
     /**
      * set a timeout for this ZApi builder , for all method created by this time in service.
      * Ignore at , if you've presented @annotation[com.zj.api.eh.ApiHandler] and sat the timeout.
+     *
+     * The ErrorHandlerTimeOut property set here will take effect on all services containing ErrorHandler called by the initialized ZApi instance this time.
+     * @param timeOut When the service method fails, it will call back to ErrorHandler (if set),
+     * and wait for ErrorHandler to process and return the interception change result , if the waiting time is longer than this time,
+     * it is considered that the error processing has timed out, at this time,
+     * the subsequent processing steps of ErrorHandler will be ignored, and the error will be returned directly to the calling thread.
+     * @see [ErrorHandler.interruptErrorBody]
      * */
     fun timeOut(timeOut: Long): BaseApiProxy<T, ERROR_HANDLER> {
         this.timeOut = timeOut
@@ -59,19 +66,6 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
      * */
     fun logLevel(level: LogLevel): BaseApiProxy<T, ERROR_HANDLER> {
         this.logLevel = level
-        return this
-    }
-
-    /**
-     * The ErrorHandlerTimeOut property set here will take effect on all services containing ErrorHandler called by the initialized ZApi instance this time.
-     * @param timeOut When the service method fails, it will call back to ErrorHandler (if set),
-     * and wait for ErrorHandler to process and return the interception change result , if the waiting time is longer than this time,
-     * it is considered that the error processing has timed out, at this time,
-     * the subsequent processing steps of ErrorHandler will be ignored, and the error will be returned directly to the calling thread.
-     * @see [ErrorHandler.interruptErrorBody]
-     * */
-    fun errorHandlerTimeOut(timeOut: Long): BaseApiProxy<T, ERROR_HANDLER> {
-        this.timeOut = timeOut
         return this
     }
 

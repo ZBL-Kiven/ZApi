@@ -7,8 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import com.zj.api.adapt.HandledException
 import com.zj.api.base.BaseApiProxy
 import com.zj.api.base.RequestInCompo
-import com.zj.api.downloader.DownloadCompo
-import com.zj.api.downloader.DownloadListener
+import com.zj.api.downloader.DownloadBuilder
 import com.zj.api.eh.ErrorHandler
 import com.zj.api.exception.ApiException
 import com.zj.api.interfaces.RequestCancelable
@@ -25,7 +24,6 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import java.io.File
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -89,17 +87,11 @@ class ZApi {
          * --------------------------------------------------- Create your service ⬆ ----------------------------------------------------------------
          * */
 
-        /**
-         * download file
-         * */
-        fun download(target: File, url: String, listener: DownloadListener): DownloadCompo {
-            return DownloadCompo(target, url, listener)
-        }
-
         val Uploader = UploadBuilder.Companion
 
         val MultiUploader = MultiUploadBuilder.Companion
 
+        val Downloader = DownloadBuilder.Companion
 
         override fun accept(t: Throwable?) {
             t?.printStackTrace()

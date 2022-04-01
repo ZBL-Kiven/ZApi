@@ -15,6 +15,7 @@ import com.zj.api.interfaces.RequestCancelable
 import com.zj.api.uploader.FileInfo
 import com.zj.api.uploader.FileUploadListener
 import com.zj.api.utils.LoggerInterface
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -48,16 +49,14 @@ class MainActivity : AppCompatActivity() {
         v.text = s
         val f = File(cacheDir, "ZApi_download_test.png")
         val url = "https://img0.baidu.com/it/u=1032173647,760525262&fm=253&fmt=auto&app=120&f=JPEG?w=1000&h=562"
-        ZApi.download(f, url, object : DownloadListener {
-            override fun onCompleted(absolutePath: String) {
-                runOnUiThread {
-                    v.text = absolutePath
-                    curDownloadedFile = absolutePath
-                }
+        ZApi.Downloader.with(url, f).callId("111").errorHandler(ApiErrorHandler).timeout(3000).start(object : DownloadListener {
+            override suspend fun onCompleted(absolutePath: String) {
+                v.text = absolutePath
+                curDownloadedFile = absolutePath
             }
 
-            override fun onError(e: Throwable?, isCanceled: Boolean) {
-                runOnUiThread { v.text = e?.message }
+            override suspend fun onError(e: Throwable?, isCanceled: Boolean) {
+                v.text = e?.message
                 e?.printStackTrace()
             }
         })
@@ -73,7 +72,7 @@ class MainActivity : AppCompatActivity() {
         val fInfo = FileInfo(f.name, "file", f)
         val url = Constance.getBaseUrl() + "/im/upload/file"
         val header = Constance.getHeader() + mapOf("Content-Type" to "multipart/form-data", "userId" to "151147", "token" to "sanhe12345", "timeStamp" to "$timeStamp")
-        ZApi.MultiUploader.with(url).addFile(fInfo).header(header).addParams(map).start(object : FileUploadListener {
+        ZApi.MultiUploader.with(url).errorHandler(ApiErrorHandler).addFile(fInfo).header(header).addParams(map).start(object : FileUploadListener {
 
             override fun onError(uploadId: String, fileInfo: FileInfo?, exception: ApiException?, errorBody: Any?) {
                 (v as? TextView)?.text = exception?.message

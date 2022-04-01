@@ -7,21 +7,21 @@ import java.io.*
 @Suppress("MemberVisibilityCanBePrivate", "unused")
 internal object Downloader {
 
-    fun writeResponseToDisk(path: String, response: Response<ResponseBody>, downloadListener: DownloadListener) {
+    fun writeResponseToDisk(builder: DownloadBuilder, response: Response<ResponseBody>) {
         val body = response.body()
         if (body == null) {
-            downloadListener.onError(NullPointerException("the downloaded response body was null."))
+            builder.result { onError(NullPointerException("the downloaded response body was null.")) }
             return
         }
-        writeFileFromIS(File(path), body.byteStream(), body.contentLength(), downloadListener)
+        writeFileFromIS(builder, body.byteStream(), body.contentLength())
     }
 
-    fun writeFileFromIS(f: File, `is`: InputStream, totalLength: Long, downloadListener: DownloadListener) {
-        var file: File? = f
-        downloadListener.onStart()
+    fun writeFileFromIS(builder: DownloadBuilder, `is`: InputStream, totalLength: Long) {
+        var file: File? = builder.target
+        builder.result { onStart() }
         file = createFile(file)
         if (file == null) {
-            downloadListener.onError(IOException("create new file :IOException"))
+            builder.result { onError(IOException("create new file :IOException")) }
             return
         }
         var os: OutputStream? = null
@@ -31,14 +31,17 @@ internal object Downloader {
             val sBufferSize = 8192
             val data = ByteArray(sBufferSize)
             var len: Int
+            var last = -1
             while (`is`.read(data, 0, sBufferSize).also { len = it } != -1) {
                 os.write(data, 0, len)
                 currentLength += len.toLong()
-                downloadListener.onProgress((100 * currentLength / totalLength).toInt())
+                val curProgress = (100f * currentLength / totalLength).toInt()
+                if (last < curProgress) builder.result { onProgress(curProgress) }
+                last = curProgress
             }
-            downloadListener.onCompleted(file.absolutePath)
+            builder.result { onCompleted(file.absolutePath) }
         } catch (e: IOException) {
-            downloadListener.onError(IOException("cannot to write bytes to file ,case :" + e.message))
+            builder.result { onError(IOException("cannot to write bytes to file ,case :" + e.message)) }
         } finally {
             try {
                 `is`.close()
@@ -51,6 +54,10 @@ internal object Downloader {
                 e.printStackTrace()
             }
         }
+    }
+
+    private fun DownloadListener.result() {
+
     }
 
     private fun createFile(source: File?): File? {

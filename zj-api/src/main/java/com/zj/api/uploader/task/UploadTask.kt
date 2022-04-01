@@ -38,7 +38,7 @@ sealed class UploadTask<X : Builder<*>>(protected val builder: X, protected val 
         }
         if (!uploadInterceptor.intercept(builder, observer)) {
             val url = builder.url.url()
-            val api = ZApi.create(ZUploadService::class.java, builder.errorHandler).header(builder.headers).build()
+            val api = ZApi.create(ZUploadService::class.java, builder.errorHandler).header(builder.headers).timeOut(builder.timeout).build()
             startUpload(url, api, subscribeOn)
         }
     }
@@ -84,12 +84,12 @@ class SimpleUploadTask @JvmOverloads internal constructor(builder: UploadBuilder
         }
         reqCompo = api.upload(url, map, part).call(builder.lo, Schedulers.io(), subscribeOn) { isSuccess, data, throwable, a ->
             if (isSuccess) {
-                if (builder.deleteCompressFile) delete(builder.fileInfo?.path)
                 observer?.onSuccess(builder.callId, data, totalBytes)
             } else {
                 observer?.onError(builder.callId, fileInfo, throwable, a)
             }
             observer?.onCompleted(builder.callId, fileInfo, totalBytes)
+            destroy()
         }
     }
 
@@ -99,7 +99,7 @@ class SimpleUploadTask @JvmOverloads internal constructor(builder: UploadBuilder
     }
 }
 
-open class MultiUploadTask @JvmOverloads internal constructor(builder: MultiUploadBuilder, observer: FileUploadListener? = null, uploadInterceptor: UploadInterceptor = UploadInterceptor.getDefault()) : UploadTask<MultiUploadBuilder>(builder, observer, uploadInterceptor) {
+class MultiUploadTask @JvmOverloads internal constructor(builder: MultiUploadBuilder, observer: FileUploadListener? = null, uploadInterceptor: UploadInterceptor = UploadInterceptor.getDefault()) : UploadTask<MultiUploadBuilder>(builder, observer, uploadInterceptor) {
 
     override fun startUpload(url: String, api: ZUploadService, subscribeOn: Scheduler) {
         val body = MultipartBody.Builder()
@@ -119,6 +119,7 @@ open class MultiUploadTask @JvmOverloads internal constructor(builder: MultiUplo
                 observer?.onError(builder.callId, null, throwable, a)
             }
             observer?.onCompleted(builder.callId, null, totalBytes)
+            destroy()
         }
     }
 
