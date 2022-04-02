@@ -1,5 +1,6 @@
 package com.zj.apiTest
 
+import com.zj.api.ZApi
 import com.zj.api.call.coroutine.SuspendObservable
 import com.zj.api.eh.ApiHandler
 import com.zj.api.mock.Mock
@@ -16,7 +17,7 @@ interface TestService {
     @GET("json/")
     fun getIp(@Query("lang") lang: String): Observable<Any>
 
-    @ApiHandler(timeOut = 1000)
+    @ApiHandler(timeOut = 1000, successEHScope = ZApi.MAIN, errorEHScope = ZApi.IO, id = "first_test")
     @GET("json/")
     suspend fun getIpCourSimple(@Query("lang") lang: String): Any?
 

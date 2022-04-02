@@ -1,6 +1,8 @@
 package com.zj.api.utils
 
 import android.util.Log
+import com.zj.api.ZApi
+import org.json.JSONObject
 
 @Suppress("unused")
 internal object LogUtils {
@@ -11,12 +13,16 @@ internal object LogUtils {
 
     fun d(target: String, s: String) {
         if (debugAble) Log.d(String.format(TAG, target), s)
-        onLog(target, Log.DEBUG, s)
+        Constance.withScheduler(LogUtils, ZApi.MAIN, null) {
+            onLog(target, Log.DEBUG, s)
+        }
     }
 
     fun e(target: String, s: String) {
         if (debugAble) Log.e(String.format(TAG, target), s)
-        onLog(target, Log.ERROR, s)
+        Constance.withScheduler(LogUtils, ZApi.MAIN, null) {
+            onLog(target, Log.ERROR, s)
+        }
     }
 
     private fun onLog(target: String, level: Int, s: String) {
@@ -28,13 +34,23 @@ internal object LogUtils {
         }
     }
 
-    fun onSizeParsed(fromCls: String, isSend: Boolean, size: Long) {
+    fun onSizeParsed(fromCls: String, isSend: Boolean, size: Long, vararg msg: Pair<String, String>) {
         try {
-            lin[fromCls]?.onSizeParsed(fromCls, isSend, size)
-            globalStreamInterface?.onSizeParsed(fromCls, isSend, size)
+            val obj = JSONObject()
+            msg.forEach {
+                obj.put(it.first, it.second)
+            }
+            Constance.withScheduler(LogUtils, ZApi.MAIN, null) {
+                notifyFlowChange(fromCls, isSend, size, obj.toString())
+            }
         } catch (e: Exception) {
             this.e(fromCls, e.message ?: "onSizeParsed error!")
         }
+    }
+
+    private fun notifyFlowChange(fromCls: String, isSend: Boolean, size: Long, msg: String) {
+        lin[fromCls]?.onSizeParsed(fromCls, isSend, size, msg)
+        globalStreamInterface?.onSizeParsed(fromCls, isSend, size, msg)
     }
 
     private val lin = hashMapOf<String, LoggerInterface>()
@@ -57,7 +73,7 @@ internal object LogUtils {
 
 interface LoggerInterface {
 
-    fun onSizeParsed(fromCls: String, isSend: Boolean, size: Long)
+    fun onSizeParsed(fromCls: String, isSend: Boolean, size: Long, msg: String)
 
     fun onLog(level: Int, tag: String, s: String) {}
 }

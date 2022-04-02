@@ -55,6 +55,9 @@ class DownloadBuilder private constructor(internal val url: UrlProvider, interna
         lo = null
     }
 
+    /**
+     * This setting identifies which thread its callback is in. See also [LimitScope]
+     * */
     fun observerOn(@LimitScope scheduler: String): DownloadBuilder {
         this.scheduler = scheduler
         return this
@@ -84,11 +87,18 @@ class DownloadBuilder private constructor(internal val url: UrlProvider, interna
         return this
     }
 
-    fun with(lo: LifecycleOwner?): DownloadBuilder {
+    /**
+     * Set to bind it to the lifecycle of [LifecycleOwner].、
+     * */
+    fun bindTo(lo: LifecycleOwner?): DownloadBuilder {
         this.lo = lo
         return this
     }
 
+    /**
+     * Ultimately the same effect as [ZApi.create] , @see [ErrorHandler]
+     * this handler parses and post the result before it is available , for you to do something.
+     * */
     fun errorHandler(handler: ErrorHandler): DownloadBuilder {
         this.errorHandler = handler
         return this
@@ -97,6 +107,6 @@ class DownloadBuilder private constructor(internal val url: UrlProvider, interna
     fun start(listener: DownloadListener? = null, downloadInterceptor: DownloadInterceptor? = null): DownloadCompo {
         this.listener = listener
         this.downloadInterceptor = downloadInterceptor
-        return DownloadCompo(this)
+        return DownloadCompo(callId, this)
     }
 }

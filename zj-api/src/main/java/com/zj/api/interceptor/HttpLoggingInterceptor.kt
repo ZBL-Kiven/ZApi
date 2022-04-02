@@ -91,6 +91,7 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
                 i++
             }
             logger.invoke("------------------------------ headers end ----------------------------")
+            val contentLength = requestBody?.contentLength()
             if (!logBody || !hasRequestBody) {
                 logger.invoke("===> END " + request.method())
             } else if (bodyHasUnknownEncoding(request.headers())) {
@@ -104,7 +105,6 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
                 if (contentType != null) {
                     charset = contentType.charset(UTF8)
                 }
-                val contentLength = requestBody?.contentLength()
                 if (isPlaintext(buffer)) {
                     if (logBody) {
                         logger.invoke("------------------------------ body start ----------------------------")
@@ -115,8 +115,8 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
                 } else {
                     logger.invoke("===> END " + request.method() + " (binary " + requestBody?.contentLength() + "-byte body omitted)")
                 }
-                LogUtils.onSizeParsed(clsName, true, contentLength ?: 0L)
             }
+            LogUtils.onSizeParsed(clsName, true, contentLength ?: 0L)
         }
 
         val startNs = System.nanoTime()
@@ -150,7 +150,7 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
             }
             logger.invoke("------------------------------ server headers end----------------------------")
         }
-        if (!logResultBody || !HttpHeaders.hasBody(response)) {
+        if (!HttpHeaders.hasBody(response)) {
             logger.invoke("<=== END HTTP")
         } else if (bodyHasUnknownEncoding(response.headers())) {
             logger.invoke("<=== END HTTP (encoded body omitted)")
@@ -178,17 +178,17 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
                 logger.invoke("<=== END HTTP (binary " + buffer.size() + "-byte body omitted)")
                 return response
             }
-            if (contentLength != 0L) {
+            if (logResultBody && contentLength != 0L) {
                 logger.invoke(buffer.clone().readString(charset))
             }
             logger.invoke("------------------------------ response body end ----------------------------")
-            val sendSize = buffer.size()
+            val length = buffer.size()
             if (gzippedLength != null) {
                 LogUtils.onSizeParsed(clsName, false, gzippedLength)
-                logger.invoke("<=== END HTTP ($sendSize-byte, $gzippedLength-gzipped-byte body)")
+                logger.invoke("<=== END HTTP ($length-byte, $gzippedLength-gzipped-byte body)")
             } else {
-                LogUtils.onSizeParsed(clsName, false, sendSize)
-                logger.invoke("<=== END HTTP ($sendSize-byte body)")
+                LogUtils.onSizeParsed(clsName, false, length)
+                logger.invoke("<=== END HTTP ($length-byte body)")
             }
             logger.invoke(" ")
         }

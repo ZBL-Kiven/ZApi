@@ -15,7 +15,6 @@ import com.zj.api.interfaces.RequestCancelable
 import com.zj.api.uploader.FileInfo
 import com.zj.api.uploader.FileUploadListener
 import com.zj.api.utils.LoggerInterface
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -34,8 +33,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         ZApi.addFlowsListener(TestService::class.java, object : LoggerInterface {
-            override fun onSizeParsed(fromCls: String, isSend: Boolean, size: Long) {
-                Log.e("------", "from :$fromCls , onSizeParsed in thread : ${Thread.currentThread().name}: isSend = $isSend , size = $size")
+            override fun onSizeParsed(fromCls: String, isSend: Boolean, size: Long, msg: String) {
+                Log.e("------", "from :$fromCls , onSizeParsed in thread : ${Thread.currentThread().name}: isSend = $isSend , size = $size , msg = $msg")
             }
         })
     }
@@ -50,12 +49,12 @@ class MainActivity : AppCompatActivity() {
         val f = File(cacheDir, "ZApi_download_test.png")
         val url = "https://img0.baidu.com/it/u=1032173647,760525262&fm=253&fmt=auto&app=120&f=JPEG?w=1000&h=562"
         ZApi.Downloader.with(url, f).callId("111").errorHandler(ApiErrorHandler).timeout(3000).start(object : DownloadListener {
-            override suspend fun onCompleted(absolutePath: String) {
+            override suspend fun onCompleted(callId: String, absolutePath: String) {
                 v.text = absolutePath
                 curDownloadedFile = absolutePath
             }
 
-            override suspend fun onError(e: Throwable?, isCanceled: Boolean) {
+            override suspend fun onError(callId: String, e: Throwable?, isCanceled: Boolean) {
                 v.text = e?.message
                 e?.printStackTrace()
             }
@@ -72,7 +71,7 @@ class MainActivity : AppCompatActivity() {
         val fInfo = FileInfo(f.name, "file", f)
         val url = Constance.getBaseUrl() + "/im/upload/file"
         val header = Constance.getHeader() + mapOf("Content-Type" to "multipart/form-data", "userId" to "151147", "token" to "sanhe12345", "timeStamp" to "$timeStamp")
-        ZApi.MultiUploader.with(url).errorHandler(ApiErrorHandler).addFile(fInfo).header(header).addParams(map).start(object : FileUploadListener {
+        ZApi.Uploader.with(url).errorHandler(ApiErrorHandler).setFileInfo(fInfo).header(header).addParams(map).start(object : FileUploadListener {
 
             override fun onError(uploadId: String, fileInfo: FileInfo?, exception: ApiException?, errorBody: Any?) {
                 (v as? TextView)?.text = exception?.message

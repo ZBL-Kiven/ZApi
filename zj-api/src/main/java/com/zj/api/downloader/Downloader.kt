@@ -10,7 +10,7 @@ internal object Downloader {
     fun writeResponseToDisk(builder: DownloadBuilder, response: Response<ResponseBody>) {
         val body = response.body()
         if (body == null) {
-            builder.result { onError(NullPointerException("the downloaded response body was null.")) }
+            builder.result { onError(builder.callId, NullPointerException("the downloaded response body was null.")) }
             return
         }
         writeFileFromIS(builder, body.byteStream(), body.contentLength())
@@ -18,10 +18,10 @@ internal object Downloader {
 
     fun writeFileFromIS(builder: DownloadBuilder, `is`: InputStream, totalLength: Long) {
         var file: File? = builder.target
-        builder.result { onStart() }
+        builder.result { onStart(builder.callId) }
         file = createFile(file)
         if (file == null) {
-            builder.result { onError(IOException("create new file :IOException")) }
+            builder.result { onError(builder.callId, IOException("create new file :IOException")) }
             return
         }
         var os: OutputStream? = null
@@ -36,12 +36,12 @@ internal object Downloader {
                 os.write(data, 0, len)
                 currentLength += len.toLong()
                 val curProgress = (100f * currentLength / totalLength).toInt()
-                if (last < curProgress) builder.result { onProgress(curProgress) }
+                if (last < curProgress) builder.result { onProgress(builder.callId, curProgress) }
                 last = curProgress
             }
-            builder.result { onCompleted(file.absolutePath) }
+            builder.result { onCompleted(builder.callId, file.absolutePath) }
         } catch (e: IOException) {
-            builder.result { onError(IOException("cannot to write bytes to file ,case :" + e.message)) }
+            builder.result { onError(builder.callId, IOException("cannot to write bytes to file ,case :" + e.message)) }
         } finally {
             try {
                 `is`.close()
@@ -54,10 +54,6 @@ internal object Downloader {
                 e.printStackTrace()
             }
         }
-    }
-
-    private fun DownloadListener.result() {
-
     }
 
     private fun createFile(source: File?): File? {

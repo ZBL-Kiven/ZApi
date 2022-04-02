@@ -1,7 +1,6 @@
 package com.zj.api.utils
 
 import android.os.Looper
-import android.util.Log
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.coroutineScope
 import com.zj.api.ZApi

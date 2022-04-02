@@ -11,7 +11,7 @@ import retrofit2.http.GET
 import retrofit2.http.Streaming
 import retrofit2.http.Url
 
-class DownloadCompo internal constructor(private val builder: DownloadBuilder) : RequestCancelable {
+class DownloadCompo internal constructor(val callId: String, private val builder: DownloadBuilder) : RequestCancelable {
 
     interface DownloadService {
 
@@ -34,7 +34,7 @@ class DownloadCompo internal constructor(private val builder: DownloadBuilder) :
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                builder.result { onError(t) }
+                builder.result { onError(callId, t) }
             }
         })
     }
@@ -42,7 +42,7 @@ class DownloadCompo internal constructor(private val builder: DownloadBuilder) :
     override fun cancel(msg: String?, throwable: Throwable?) {
         call.cancel()
         if (msg.isNullOrEmpty().not() || throwable != null) {
-            builder.result { onError(Exception(msg, throwable), true) }
+            builder.result { onError(callId, Exception(msg, throwable), true) }
         }
     }
 }

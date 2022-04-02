@@ -19,7 +19,7 @@ import okhttp3.RequestBody
 import java.io.File
 
 @Suppress("SpellCheckingInspection", "unused")
-sealed class UploadTask<X : Builder<*>>(protected val builder: X, protected val observer: FileUploadListener?, private val uploadInterceptor: UploadInterceptor) : ProgressListener {
+sealed class UploadTask<X : Builder<*>>(protected val builder: X, protected val observer: FileUploadListener?, private val uploadInterceptor: UploadInterceptor, val callId: String = builder.callId) : ProgressListener {
 
     protected var reqCompo: RequestCancelable? = null
     protected var totalBytes: Long = 0
