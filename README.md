@@ -20,7 +20,7 @@
       <img src = "https://img.shields.io/static/v1?label=minVersion&message=5.0&color=cce"/>
   </a>
   <a>
-      <img src = "https://img.shields.io/static/v1?label=newest version&message=1.3.0&color=DAC"/>
+      <img src = "https://img.shields.io/static/v1?label=newest version&message=1.3.1&color=DAC"/>
   </a>
 </p>
 

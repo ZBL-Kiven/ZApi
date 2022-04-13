@@ -1,6 +1,5 @@
 package com.zj.api.utils
 
-import android.os.Looper
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.coroutineScope
 import com.zj.api.ZApi
@@ -108,9 +107,6 @@ internal object Constance {
     }
 
     private fun runWithScope(scope: String): CoroutineScope {
-        if (Thread.currentThread() == Looper.getMainLooper().thread) {
-            throw IllegalArgumentException("The network active should running in work thread!")
-        }
         return when (scope) {
             ZApi.IO -> CoroutineScope(Dispatchers.IO)
             ZApi.CALCULATE -> CoroutineScope(Dispatchers.Default)
