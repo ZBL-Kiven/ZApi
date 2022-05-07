@@ -1,6 +1,5 @@
 package com.zj.api.interceptor
 
-import com.zj.api.utils.Constance.HTTPS
 import java.net.URL
 
 abstract class UrlProvider {
@@ -38,7 +37,7 @@ abstract class UrlProvider {
         init {
             val url = URL(u)
             protocol = url.protocol
-            val isHttps = protocol.contains(HTTPS, ignoreCase = true)
+            val isHttps = protocol.contains("https", ignoreCase = true)
             port = when (url.port) {
                 -1 -> if (isHttps) 443 else 80
                 else -> url.port

@@ -4,20 +4,30 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.coroutineScope
 import com.zj.api.ZApi
 import com.zj.api.adapt.AdapterPendingData
+import com.zj.api.eh.EHParam
 import com.zj.api.eh.ErrorHandler
 import com.zj.api.eh.LimitScope
 import com.zj.api.exception.ApiException
 import com.zj.api.interfaces.ResponseHandler
 import kotlinx.coroutines.*
 import okhttp3.*
-import retrofit2.Call
-import retrofit2.HttpException
-import retrofit2.Response
+import com.zj.ok3.Call
+import com.zj.ok3.HttpException
+import com.zj.ok3.Response
+import java.lang.IllegalArgumentException
+import java.lang.reflect.Type
 import java.util.concurrent.TimeoutException
 
 internal object Constance {
 
-    const val HTTPS = "https"
+    fun <T> checkMockedValid(pendingData: AdapterPendingData<T>, returnType: Type) {
+        if (pendingData.mockData == null || returnType == Any::class.java) return
+        val cls = pendingData.mockData.javaClass
+        val mockType = cls.getDeclaredMethod("getMockData", EHParam::class.java).returnType
+        if (returnType != mockType) {
+            throw IllegalArgumentException("the mockAble<$returnType> annotation has present, but the mocked class return type is <$mockType>")
+        }
+    }
 
     fun <T, R> parseBodyResponse(pendingData: AdapterPendingData<T>, response: Response<T?>, handler: R, rh: ResponseHandler<T?, R>) {
         val body = response.body()
@@ -42,7 +52,7 @@ internal object Constance {
         }
         var result: T? = null
         val job = runWithScope(pendingData.handleScheduler.successScope).launch {
-            result = pendingData.errorHandler.interruptSuccessBody(pendingData.handleScheduler.id, code, body)
+            result = pendingData.errorHandler.interruptSuccessBody(pendingData.handleScheduler.id, code, body, pendingData.methodParamData)
         }
         while (result == null && !pendingData.isTimeOut) {
             pendingData.perWait(100)
@@ -89,7 +99,7 @@ internal object Constance {
     private fun <R> dealErrorWithHandler(pendingData: AdapterPendingData<R>, eh: ErrorHandler, he: ApiException, done: (ApiException, Any?) -> Unit) {
         var result: Pair<Boolean, Any?>? = null
         val job = runWithScope(pendingData.handleScheduler.errorScope).launch {
-            result = eh.interruptErrorBody(he)
+            result = eh.interruptErrorBody(he, pendingData.methodParamData)
         }
         while (result == null && !pendingData.isTimeOut) {
             pendingData.perWait(100)

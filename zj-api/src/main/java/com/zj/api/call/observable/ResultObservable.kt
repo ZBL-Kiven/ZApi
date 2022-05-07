@@ -6,7 +6,7 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.exceptions.CompositeException
 import io.reactivex.exceptions.Exceptions
 import io.reactivex.plugins.RxJavaPlugins
-import retrofit2.Response
+import com.zj.ok3.Response
 
 internal class ResultObservable<T>(private val upstream: Observable<Response<T?>?>) : Observable<Result<T?>?>() {
 

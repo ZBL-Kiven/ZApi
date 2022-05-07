@@ -1,7 +1,7 @@
 package com.zj.api.downloader
 
 import okhttp3.ResponseBody
-import retrofit2.Response
+import com.zj.ok3.Response
 import java.io.*
 
 @Suppress("MemberVisibilityCanBePrivate", "unused")

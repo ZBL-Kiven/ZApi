@@ -23,7 +23,7 @@ abstract class ErrorHandler {
      * such as [com.zj.api.call.coroutine.SuspendObservable.fromErrorHandler], where fromErrorHandler is the return value,
      * which is often used at the calling place after handling special errors.
      * */
-    open suspend fun interruptErrorBody(throwable: ApiException?): Pair<Boolean, Any?> {
+    open suspend fun interruptErrorBody(throwable: ApiException?, ehParams: EHParam): Pair<Boolean, Any?> {
         return Pair(false, null)
     }
 
@@ -34,7 +34,7 @@ abstract class ErrorHandler {
      * Override this method to perform data retrieval,
      * interception, modification, etc. if it is considered successful, such as HttpCode = 204.
      * */
-    open suspend fun <R> interruptSuccessBody(id: String, code: Int, data: R?): R? {
+    open suspend fun <R> interruptSuccessBody(id: String, code: Int, data: R?, ehParams: EHParam): R? {
         return data
     }
 }

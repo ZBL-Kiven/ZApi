@@ -1,7 +1,7 @@
 package com.zj.api.downloader
 
 import okhttp3.ResponseBody
-import retrofit2.Call
+import com.zj.ok3.Call
 
 interface DownloadInterceptor {
 

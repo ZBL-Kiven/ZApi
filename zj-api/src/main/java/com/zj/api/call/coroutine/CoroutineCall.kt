@@ -2,15 +2,18 @@ package com.zj.api.call.coroutine
 
 import com.zj.api.adapt.AdapterPendingData
 import com.zj.api.utils.Constance
+import com.zj.ok3.*
+import com.zj.ok3.Call
+import com.zj.ok3.Callback
+import com.zj.ok3.Response
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.*
 import okio.Timeout
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.HttpException
-import retrofit2.Response
 import java.lang.IllegalArgumentException
 
-internal class CoroutineCall<F>(private val region: Call<F?>, private val pendingData: AdapterPendingData<F?>) : Call<SuspendObservable<F?>?> {
+internal class CoroutineCall<F>(private val region: Call<F?>, private val pendingData: AdapterPendingData<F>) : Call<SuspendObservable<F?>?> {
 
     override fun clone(): Call<SuspendObservable<F?>?> {
         return CoroutineCall(region, pendingData)
@@ -22,7 +25,11 @@ internal class CoroutineCall<F>(private val region: Call<F?>, private val pendin
 
     override fun enqueue(callback: Callback<SuspendObservable<F?>?>) {
         if (pendingData.mockData != null) {
-            onSuccess(callback, 200, pendingData.mockData)
+            region.cancel()
+            CoroutineScope(Dispatchers.IO).launch {
+                val mockData = pendingData.mockData.getMockData(pendingData.methodParamData)
+                onSuccess(callback, 200, mockData)
+            }
             return
         }
         if (pendingData.preError != null) {

@@ -4,12 +4,12 @@ import com.zj.api.ZApi
 import com.zj.api.downloader.Downloader.writeResponseToDisk
 import com.zj.api.interfaces.RequestCancelable
 import okhttp3.ResponseBody
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import retrofit2.http.GET
-import retrofit2.http.Streaming
-import retrofit2.http.Url
+import com.zj.ok3.Call
+import com.zj.ok3.Callback
+import com.zj.ok3.Response
+import com.zj.ok3.http.GET
+import com.zj.ok3.http.Streaming
+import com.zj.ok3.http.Url
 
 class DownloadCompo internal constructor(val callId: String, private val builder: DownloadBuilder) : RequestCancelable {
 

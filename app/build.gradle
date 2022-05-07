@@ -31,5 +31,4 @@ dependencies {
 //    api 'com.cc.android:api:1.2.6'
 
     implementation project(':zj-api')
-    api 'com.squareup.retrofit2:converter-scalars:2.1.0'
 }

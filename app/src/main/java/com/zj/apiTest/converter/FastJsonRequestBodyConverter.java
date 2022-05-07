@@ -5,10 +5,10 @@ import androidx.annotation.NonNull;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializeConfig;
 import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.zj.ok3.Converter;
 
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
-import retrofit2.Converter;
 
 final class FastJsonRequestBodyConverter<T> implements Converter<T, RequestBody> {
     private static final MediaType MEDIA_TYPE = MediaType.parse("application/json; charset=UTF-8");

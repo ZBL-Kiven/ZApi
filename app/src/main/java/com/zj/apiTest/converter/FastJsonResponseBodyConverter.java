@@ -3,9 +3,9 @@ package com.zj.apiTest.converter;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.parser.Feature;
 import com.alibaba.fastjson.parser.ParserConfig;
+import com.zj.ok3.Converter;
 
 import okhttp3.ResponseBody;
-import retrofit2.Converter;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -14,11 +14,11 @@ final class FastJsonResponseBodyConverter<T> implements Converter<ResponseBody, 
 
     private static final Feature[] EMPTY_SERIALIZER_FEATURES = new Feature[0];
 
-    private Type mType;
+    private final Type mType;
 
-    private ParserConfig config;
-    private int featureValues;
-    private Feature[] features;
+    private final ParserConfig config;
+    private final int featureValues;
+    private final Feature[] features;
 
     FastJsonResponseBodyConverter(Type type, ParserConfig config, int featureValues, Feature... features) {
         mType = type;

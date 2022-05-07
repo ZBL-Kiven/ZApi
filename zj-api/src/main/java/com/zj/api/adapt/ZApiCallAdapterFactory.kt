@@ -12,33 +12,31 @@ import com.zj.api.eh.HandleScheduler
 import com.zj.api.mock.Mock
 import com.zj.api.mock.MockAble
 import io.reactivex.Observable
-import retrofit2.Call
-import retrofit2.CallAdapter
-import retrofit2.Retrofit
 import java.lang.IllegalArgumentException
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.util.*
+import com.zj.ok3.*
 
-open class ZApiCallAdapterFactory<T : Any?>(private val errorHandler: ErrorHandler?, private val mockAble: Boolean) : BaseCallAdapterFactory() {
+open class ZApiCallAdapterFactory<T>(private val errorHandler: ErrorHandler?, private val mockAble: Boolean) : BaseCallAdapterFactory() {
 
-    private lateinit var pendingData: AdapterPendingData<Any?>
+    private lateinit var pendingData: AdapterPendingData<T>
 
-    final override fun get(returnType: Type, annotations: Array<Annotation>, retrofit: Retrofit): CallAdapter<*, *>? {
+    final override fun get(returnType: Type, annotations: Array<Annotation>, hsc: ZHttpServiceCreator): CallAdapter<*, *>? {
         val mockData = if (mockAble) checkMockService(annotations) else null
         val handleScheduler = getHandleScheduler(annotations)
-        pendingData = AdapterPendingData(targetCls, errorHandler, preError, handleScheduler, mockData)
-        return getCallAdapter(returnType, annotations, retrofit)
+        pendingData = AdapterPendingData(targetCls, errorHandler, preError, handleScheduler, mockData, methodParamData)
+        return getCallAdapter(returnType, annotations, hsc)
     }
 
-    open fun getCallAdapter(returnType: Type, annotations: Array<Annotation>, retrofit: Retrofit): CallAdapter<*, *>? {
+    open fun getCallAdapter(returnType: Type, annotations: Array<Annotation>, hsc: ZHttpServiceCreator): CallAdapter<*, *>? {
         if (!::pendingData.isInitialized) return null
         val funcRawType = getRawType(returnType)
         if (funcRawType != Call::class.java) {
             if (getRawType(returnType) == SuspendObservable::class.java) {
                 throw IllegalArgumentException("Functions accessed using coroutines should have their return type com.zj.api.call.coroutine.SuspendObservable<Foo>")
             }
-            return DefaultAdapterFactory.createAsync(pendingData).get(returnType, annotations, retrofit)
+            return DefaultAdapterFactory.createAsync(pendingData).get(returnType, annotations, hsc)
         }
         check(returnType is ParameterizedType) {
             "return type must be parameterized as SuspendObservable<Foo>"
@@ -59,19 +57,18 @@ open class ZApiCallAdapterFactory<T : Any?>(private val errorHandler: ErrorHandl
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun checkMockService(annotations: Array<Annotation>): T? {
+    private fun checkMockService(annotations: Array<Annotation>): MockAble<T>? {
         val mockAnn = (annotations.find { it is Mock } as? Mock) ?: return null
-        val cls: Class<out MockAble> = mockAnn.value.java
+        val cls: Class<out MockAble<T>> = mockAnn.value.java as Class<out MockAble<T>>
         if (cls.typeParameters.isNotEmpty()) {
             throw IllegalArgumentException("Type parameters are unsupported on ${cls.simpleName} constructor!")
         }
-        val mock: MockAble = try {
+        val mock: MockAble<T> = try {
             cls.newInstance()
         } catch (e: Exception) {
             throw IllegalArgumentException("Can not create instance of class ${cls.simpleName} !")
         }
-        val mocked = mock.mockData
-        return mocked as? T?
+        return mock
     }
 
     private fun getHandleScheduler(annotations: Array<Annotation>?): HandleScheduler {

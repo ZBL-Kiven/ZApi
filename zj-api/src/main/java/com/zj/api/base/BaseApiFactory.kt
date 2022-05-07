@@ -6,13 +6,13 @@ import com.zj.api.interfaces.ApiFactory
 import com.zj.api.eh.ErrorHandler
 import com.zj.api.interceptor.LogLevel
 import com.zj.api.utils.Constance.parseOrCreateHttpException
-import okhttp3.OkHttpClient
-import retrofit2.Converter
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import com.zj.ok3.Converter
+import com.zj.ok3.ZHttpServiceCreator
+import com.zj.ok3.converter.GsonConverterFactory
 import java.io.InputStream
+import okhttp3.OkHttpClient
 
-internal class BaseRfFactory<T>(
+internal class BaseApiFactory<T>(
     private val clsName: String,
     private val timeout: Long,
     private val header: MutableMap<String, String?>?,
@@ -38,8 +38,8 @@ internal class BaseRfFactory<T>(
         factory.callAdapterFactory ?: ZApiCallAdapterFactory<T>(errorHandler, mockAble)
     }
 
-    private val mRetrofit: Retrofit by lazy {
-        initRetrofit()
+    private val mZHttpServiceCreator: ZHttpServiceCreator by lazy {
+        initCreator()
     }
 
     private val onTimeoutChanged = { l: Int ->
@@ -58,7 +58,11 @@ internal class BaseRfFactory<T>(
     }
 
     fun createService(cls: Class<T>): T {
-        val service = factory.createService(mRetrofit, cls)
+        val service = factory.createService(mZHttpServiceCreator, cls) {
+            it.forEach { (k, v) ->
+                if (v != null) getCallAdapterFactory.methodParamData.addData(k, v)
+            }
+        }
         val e = if (preError == null) null else parseOrCreateHttpException("before invoke", urlProvider?.url(), header, preError)
         getCallAdapterFactory.preError = e
         getCallAdapterFactory.targetCls = cls
@@ -67,13 +71,13 @@ internal class BaseRfFactory<T>(
         return service
     }
 
-    private fun initRetrofit(): Retrofit {
-        val retrofit = Retrofit.Builder()
-        retrofit.baseUrl(urlProvider?.url() ?: "http://127.0.0.1")
-        retrofit.client(getOkHttpClient)
-        retrofit.addConverterFactory(getJsonConverter)
-        retrofit.addCallAdapterFactory(getCallAdapterFactory)
-        return retrofit.build()
+    private fun initCreator(): ZHttpServiceCreator {
+        val hsc = ZHttpServiceCreator.Builder()
+        hsc.baseUrl(urlProvider?.url() ?: "http://127.0.0.1")
+        hsc.client(getOkHttpClient)
+        hsc.addConverterFactory(getJsonConverter)
+        hsc.addCallAdapterFactory(getCallAdapterFactory)
+        return hsc.build()
     }
 
 }

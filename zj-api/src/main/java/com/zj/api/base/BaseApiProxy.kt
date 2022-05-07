@@ -92,11 +92,11 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
      * @param factory see [ApiFactory]
      * */
     fun build(factory: ApiFactory<T>? = null): T {
-        val retrofitFactory = createRetrofitFactory(factory)
-        return retrofitFactory.createService(clazz)
+        val apiFactory = createHttpFactory(factory)
+        return apiFactory.createService(clazz)
     }
 
-    private fun createRetrofitFactory(factory: ApiFactory<T>?): BaseRfFactory<T> {
+    private fun createHttpFactory(factory: ApiFactory<T>?): BaseApiFactory<T> {
         val map = mutableMapOf<String, String?>()
         var throwable: Throwable? = null
         try {
@@ -108,6 +108,6 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
         } catch (e: java.lang.Exception) {
             throwable = e
         }
-        return BaseRfFactory(clazz.simpleName, timeOut, map, baseUrl, certificate, factory ?: ApiFactory.Default(), debugAble, mockAble, logLevel, handler, throwable)
+        return BaseApiFactory(clazz.simpleName, timeOut, map, baseUrl, certificate, factory ?: ApiFactory.Default(), debugAble, mockAble, logLevel, handler, throwable)
     }
 }

@@ -1,9 +1,10 @@
 package com.zj.api.interfaces
 
+import com.zj.api.adapt.EHParameterProxy
 import com.zj.api.base.BaseCallAdapterFactory
 import com.zj.api.base.BaseHttpClientBuilder
-import retrofit2.Converter
-import retrofit2.Retrofit
+import com.zj.ok3.Converter
+import com.zj.ok3.ZHttpServiceCreator
 
 abstract class ApiFactory<T> {
 
@@ -18,15 +19,15 @@ abstract class ApiFactory<T> {
     open var jsonConverter: Converter.Factory? = null
 
     /**
-     * build your custom CallAdapterFactory. but it not retrofit factory, you'd try to  build with based BaseCallAdapterFactory.
+     * build your custom CallAdapterFactory. but it not hsc factory, you'd try to  build with based BaseCallAdapterFactory.
      * */
     open var callAdapterFactory: BaseCallAdapterFactory? = null
 
     /**
      * if you're not use it with dynamic proxy , you'd better ignore this extend
      * */
-    open fun createService(mRetrofit: Retrofit, cls: Class<T>): T {
-        return mRetrofit.create(cls)
+    open fun createService(mZHttpServiceCreator: ZHttpServiceCreator, cls: Class<T>, lazyParamFinder: (MutableMap<String, Any?>) -> Unit): T {
+        return EHParameterProxy.create(mZHttpServiceCreator, cls, lazyParamFinder)
     }
 
     internal class Default<T> : ApiFactory<T>()

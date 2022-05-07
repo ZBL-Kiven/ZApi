@@ -2,7 +2,7 @@
 
 package com.zj.api.call.observable
 
-import retrofit2.Response
+import com.zj.ok3.Response
 
 /** The result of executing an HTTP request.  */
 internal class Result<T> private constructor(private val response: Response<T>?, private val error: Throwable?) {

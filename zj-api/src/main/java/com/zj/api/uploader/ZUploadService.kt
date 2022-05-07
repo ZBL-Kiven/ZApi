@@ -1,9 +1,9 @@
 package com.zj.api.uploader
 
+import com.zj.ok3.http.*
 import io.reactivex.Observable
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
-import retrofit2.http.*
 
 interface ZUploadService {
 

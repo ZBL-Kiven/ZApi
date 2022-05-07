@@ -5,10 +5,10 @@ import io.reactivex.BackpressureStrategy
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import java.lang.reflect.Type
-import retrofit2.Call
-import retrofit2.CallAdapter
+import com.zj.ok3.Call
+import com.zj.ok3.CallAdapter
 
-internal class DefaultCallAdapter<R>(private val responseType: Type, private val scheduler: Scheduler?, private val isAsync: Boolean, private val isResult: Boolean, private val isBody: Boolean, private val isFlowAble: Boolean, private val isSingle: Boolean, private val isMaybe: Boolean, private val isCompletable: Boolean, private val pendingData: AdapterPendingData<R?>) : CallAdapter<R?, Any> {
+internal class DefaultCallAdapter<R>(private val responseType: Type, private val scheduler: Scheduler?, private val isAsync: Boolean, private val isResult: Boolean, private val isBody: Boolean, private val isFlowAble: Boolean, private val isSingle: Boolean, private val isMaybe: Boolean, private val isCompletable: Boolean, private val pendingData: AdapterPendingData<R>) : CallAdapter<R?, Any> {
 
     override fun responseType(): Type {
         return responseType

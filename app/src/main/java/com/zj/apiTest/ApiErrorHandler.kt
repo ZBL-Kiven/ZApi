@@ -2,8 +2,9 @@ package com.zj.apiTest
 
 import android.util.Log
 import com.alibaba.fastjson.JSON
-import com.zj.api.exception.ApiException
+import com.zj.api.eh.EHParam
 import com.zj.api.eh.ErrorHandler
+import com.zj.api.exception.ApiException
 
 object ApiErrorHandler : ErrorHandler() {
 
@@ -13,13 +14,11 @@ object ApiErrorHandler : ErrorHandler() {
         var message: String? = ""
     }
 
-    override suspend fun <R> interruptSuccessBody(id: String, code: Int, data: R?): R? {
-        Log.e("------- ", "transaction interruptSuccessBody")
-        return super.interruptSuccessBody(id, code, data)
+    override suspend fun <R> interruptSuccessBody(id: String, code: Int, data: R?, ehParams: EHParam): R? {
+        return super.interruptSuccessBody(id, code, data, ehParams)
     }
 
-    override suspend fun interruptErrorBody(throwable: ApiException?): Pair<Boolean, Any?> {
-        Log.e("------- ", "transaction interruptErrorBody")
+    override suspend fun interruptErrorBody(throwable: ApiException?, ehParams: EHParam): Pair<Boolean, Any?> {
         val s = kotlin.runCatching {
             throwable?.httpException?.response()?.errorBody()?.string()
         }.getOrNull()

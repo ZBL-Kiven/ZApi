@@ -2,8 +2,11 @@ package com.zj.api.mock;
 
 import androidx.annotation.Nullable;
 
-public interface MockAble {
+import com.zj.api.eh.EHParam;
 
-    @Nullable Object getMockData();
+public interface MockAble<T> {
+
+    @Nullable
+    T getMockData(EHParam ehParam);
 
 }

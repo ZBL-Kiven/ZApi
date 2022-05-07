@@ -6,8 +6,8 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.exceptions.CompositeException
 import io.reactivex.exceptions.Exceptions
 import io.reactivex.plugins.RxJavaPlugins
-import retrofit2.HttpException
-import retrofit2.Response
+import com.zj.ok3.HttpException
+import com.zj.ok3.Response
 
 internal class BodyObservable<T>(private val upstream: Observable<Response<T?>?>) : Observable<T?>() {
 

@@ -12,9 +12,9 @@ object Constance {
 
                 //                return "https://api.dev.utown.io:3080"
 
-                return "https://im.ccdev.lerjin.com"
+                //                return "https://im.ccdev.lerjin.com"
 
-                //                return "http://ip-api.com/"
+                return "http://ip-api.com/"
             }
         }
     }

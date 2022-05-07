@@ -1,6 +1,7 @@
 package com.zj.api.base
 
-import retrofit2.CallAdapter
+import com.zj.api.eh.EHParam
+import com.zj.ok3.CallAdapter
 
 abstract class BaseCallAdapterFactory : CallAdapter.Factory() {
 
@@ -12,5 +13,5 @@ abstract class BaseCallAdapterFactory : CallAdapter.Factory() {
 
     internal var timeOutDefault: Long = 0
 
-
+    internal var methodParamData = EHParam()
 }

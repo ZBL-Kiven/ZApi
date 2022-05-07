@@ -11,15 +11,15 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.exceptions.CompositeException
 import io.reactivex.exceptions.Exceptions
 import io.reactivex.plugins.RxJavaPlugins
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.zj.ok3.Call
+import com.zj.ok3.Callback
+import com.zj.ok3.Response
 
 internal class CallEnqueueObservableBase<T>(private val originalCall: Call<T?>, pendingData: AdapterPendingData<T>) : BaseErrorHandlerObservable<Response<T?>?, T>(pendingData), ResponseHandler<T?, Observer<in Response<T?>?>> {
 
     override fun subscribeActual(observer: Observer<in Response<T?>?>) {
         if (pendingData.mockData != null) {
-            Constance.dealSuccessDataWithEh(pendingData, 200, pendingData.mockData) {
+            Constance.dealSuccessDataWithEh(pendingData, 200, pendingData.mockData.getMockData(pendingData.methodParamData)) {
                 onSuccess(200, it, observer)
             }
             return
