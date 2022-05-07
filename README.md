@@ -26,28 +26,28 @@
 
 ## Introduction：
 
-###### ZApi 是基于 Okhttp3 开发的网络框架，可以非常便捷的使用 ，让你不管作何请求都只需要一行代码～
+###### ZApi 是基于 Okhttp3 开发的网络框架，可以非常便捷的使用 ，并在变态级需求下仍可轻松保持代码的简洁高效。
 
 ###### 已有多个千万用户级项目使用，详情可参见下方 Features 条目。
 
 ## Features：
 
-* 为降低学习成本，此框架注解及解析部分与 Retrofit 保持一致。
-* 支持：协程调用 。
+* 为降低学习成本，此框架 Http 部分注解及解析与 Retrofit 保持一致。
+* 支持：Kotlin 协程。
 * 支持：自定义 静/动态 BaseUrl 设定。
 * 支持：自定义 静/动态 Header 设定。
 * 支持：证书 单独/全局 配置。
 * 支持：自定义 HttpClient、RequestFactory 、JsonParser/Converter 、RequestCallBack 等内置处理器自定义。
 * 支持：单个接口单独注解超时时间 [@ApiHandler](#api_handler)。
-* 支持：单个接口单独注解 EH 回调线程 [@ApiHandler](#api_handler)。
-* 支持：注解级 [Mock](#mock) 。
+* 支持：单个接口单独注解 ErrorHandler 回调线程 [@ApiHandler](#api_handler)。
+* 支持：注解级可传参 [Mock](#mock) 。
 * 支持：添加/自定义 Logger ，按自己的个性化输出日志。
 * 支持：为上传或下载提供基于流监测的精确进度回调。
 * 支持：UploadInterceptor 拦截 / 修改 / 代理 ；上传请求。
 * 支持：DownloadInterceptor 拦截 / 修改 / 代理 ；下载请求。
 * 支持：便捷下载、上传 及其进度回调。
 * 支持：流量监控。
-* 支持：配置 全局 / 模块 / 单次； 请求异常处理器 。
+* 支持：配置 全局 / 模块 / 单次； 请求异常处理器 [ErrorHandler](#errorHandler) 。
 * 支持：配置 全日志系统 。
 * 支持：异常处理器拦截、中断、改变返回结果 。
 * 支持：请求方法带自定义参数，[@EHParams](#EHParams)注解实现请求过程参数透传。
@@ -100,6 +100,8 @@ implementation project(":zj-api")
 > 因为广谱共识的原因，解析注解这一块仍然使用 Retrofit 的 http 注解，便于新生学习、老鸟使用或升级网络框架。
 >
 > so ，依旧像 Retrofit 一样创建你的 Interface ，并使用更丰富的 Api：
+>
+> 注意：如果你的项目已有 Retrofit ，使用时需注意，ZApi 中与 Retrofit 相似的 Api 仅是为了方便学习及转换，在 ZApi 中相应函数的包名并非 retrofit.xxx , 而是 com.zj.ok3.http.* 。
 
 ```kotlin
  @GET("json/")
@@ -135,8 +137,7 @@ val testService: TestService = ZApi.create(TestService::class.java, ApiErrorHand
 
 注意：
 
-1、建议 一个 Interface 文件对应初始化一个 Service ，这样做是为了让自己更清晰的区分模块化和数据解藕。比如 UserCenterService , LaunchService ,
-AssetsService 等。每个 Service 都会动态代理 Create 传入的 Interfaces ，达到直接便捷 [访问接口](#s05) 的目的。
+1、建议 一个 Interface 文件对应初始化一个 ZApi ，这样做是为了让自己更清晰的区分模块化和数据解藕。比如 UserCenterService , LaunchService , AssetsService 等。每个 Service 都会动态代理 Create 传入的 Interfaces ，达到直接便捷 [访问接口](#s05) 的目的。
 
 2、视自身使用习惯而定，它可以初始化在静态或非静态类 ，并不会影响它里面的某个接口自动与调用接口的生命周期函数绑定。
 
@@ -149,7 +150,8 @@ ZApi.Downloader.with(url, f).callId("111") // 设置标识 ID
     .errorHandler(ApiErrorHandler) // 设置错误处理器
     .timeout(3000) // 设置超时时间
     .observerOn(ZApi.IO) // 设置在什么线程回调结果，默认主线程。
-    .start(object : DownloadListener { // fun onStart(callId) 开始
+    .start(object : DownloadListener { 
+        // fun onStart(callId) 开始
         // fun onCompleted(callId，absolutePath: String) 完成
         // fun onProgress(callId，i: Int) 进度 0 - 100
         // fun onError(callId，e: Throwable?, isCanceled: Boolean = false) 错误
@@ -159,7 +161,8 @@ ZApi.Downloader.with(url, f).callId("111") // 设置标识 ID
 ### 2. 上传
 
 ```kotlin
-ZApi.Uploader.with(url).errorHandler(ApiErrorHandler).setFileInfo(fInfo).header(header).addParams(map).start(object : FileUploadListener { // onCompleted(uploadId, fileInfo, totalBytes)  请求完成。
+ZApi.Uploader.with(url).errorHandler(ApiErrorHandler).setFileInfo(fInfo).header(header).addParams(map).start(object : FileUploadListener { 
+    // onCompleted(uploadId, fileInfo, totalBytes)  请求完成。
     // onError(uploadId, fileInfo, exception, errorBody) 出现异常，在 EH 未拦截的情况下回调。
     // onProgress(uploadId, fileInfo, progress: Int, contentLength) 进度变化（已做防抖。
     // onSuccess(uploadId, body, totalBytes) 在 EH 拦截处理或放行后回调。
@@ -199,7 +202,24 @@ testService.getIp("zh-cn").call(LifecycleOwner) { isSuccess, data, throwable, ha
 
 ### 进阶
 
-<a name="api_handler">@Apihandler</a>
+### <a name="EHParams">@EHParams</a>
+
+```kotlin
+/**
+ * @EHParams 注解 ：
+ * 被注解的参数将在实际请求时从生成代理中剥离，它不会真正参与接口传递，因此不会对接口结构、响应、性能造成任何影响。
+ * */
+@GET("json/")
+fun getIpCour(@Query("lang") lang: String, @EHParams("uid") uid: String): Observable<Any>?
+```
+
+EHParams :
+
+> 此参数默认出现在 [ErrorHandler](#errorHandler) 、[MockAble.getMockData()](#mock)  中，为当前作业的接口所带的参数 Map 集，其中包含所有的含 @EHParams 注解的参数及所有请求的默认参数。
+
+
+
+### <a name="api_handler">@Apihandler</a>
 
 ```kotlin
 /**
@@ -214,7 +234,7 @@ testService.getIp("zh-cn").call(LifecycleOwner) { isSuccess, data, throwable, ha
 suspend fun getIpCourSimple(@Query("lang") lang: String): Any?
 ```
 
-<a  name="mock">@Mock</a>
+### <a  name="mock">@Mock</a>
 
 ``` kotlin
 @Mock(MockTest::class) //mock
@@ -229,7 +249,7 @@ fun getIp(@Query("lang") lang: String): Observable<Any>
 
 此注解适用于所有通过此网络框架进行请求的方法，不限返回类型和调用类型。
 
-### ErrorHandler 异常处理器
+### <a name = "errorHandler"> ErrorHandler</a> 异常处理器
 
 ps:
 1、此处理器内方法回调的线程可配置，参见 [@ApiHandler](#api_handler)

@@ -5,7 +5,7 @@ import com.zj.api.eh.ErrorHandler
 import com.zj.api.eh.HandleScheduler
 import com.zj.api.mock.MockAble
 
-internal data class AdapterPendingData<T>(val targetCls: Class<*>?, val errorHandler: ErrorHandler?, val preError: Throwable?, val handleScheduler: HandleScheduler, val mockData: MockAble<T>?, val methodParamData: EHParam) {
+internal data class AdapterPendingData<T> constructor(val targetCls: Class<*>?, val errorHandler: ErrorHandler?, val preError: Throwable?, val handleScheduler: HandleScheduler, val mockData: MockAble<T>?, val mpd: () -> EHParam) {
 
     val isTimeOut: Boolean
         get() {
@@ -21,4 +21,9 @@ internal data class AdapterPendingData<T>(val targetCls: Class<*>?, val errorHan
     fun resetTimeOut() {
         handleThreadTime = handleScheduler.timeOut
     }
+
+    val methodParamData: EHParam
+        get() {
+            return mpd.invoke()
+        }
 }

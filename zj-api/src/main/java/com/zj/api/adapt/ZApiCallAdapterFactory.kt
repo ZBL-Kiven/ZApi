@@ -25,7 +25,7 @@ open class ZApiCallAdapterFactory<T>(private val errorHandler: ErrorHandler?, pr
     final override fun get(returnType: Type, annotations: Array<Annotation>, hsc: ZHttpServiceCreator): CallAdapter<*, *>? {
         val mockData = if (mockAble) checkMockService(annotations) else null
         val handleScheduler = getHandleScheduler(annotations)
-        pendingData = AdapterPendingData(targetCls, errorHandler, preError, handleScheduler, mockData, methodParamData)
+        pendingData = AdapterPendingData(targetCls, errorHandler, preError, handleScheduler, mockData) { methodParamData }
         return getCallAdapter(returnType, annotations, hsc)
     }
 

@@ -42,6 +42,10 @@ final class OkHttpCall<T> implements Call<T> {
         this.args = args;
         this.callFactory = callFactory;
         this.responseConverter = responseConverter;
+        try {
+            getRawCall();
+        } catch (IOException ignored) {
+        }
     }
 
     @NonNull
@@ -74,7 +78,7 @@ final class OkHttpCall<T> implements Call<T> {
      * or has thrown in previous attempts to create it.
      */
     @GuardedBy("this")
-    private okhttp3.Call getRawCall() throws IOException {
+    okhttp3.Call getRawCall() throws IOException {
         okhttp3.Call call = rawCall;
         if (call != null) return call;
 
@@ -88,7 +92,6 @@ final class OkHttpCall<T> implements Call<T> {
                 throw (Error) creationFailure;
             }
         }
-
         // Create and remember either the success or the failure.
         try {
             return rawCall = createRawCall();
