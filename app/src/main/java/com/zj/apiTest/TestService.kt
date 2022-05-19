@@ -13,7 +13,7 @@ interface TestService {
 
     @Mock(MockTest::class)
     @GET("json/")
-    fun getIpMock(@Query("lang") lang: String, @EHParams("aaa") p: String): Observable<Any>
+    fun getIpMock(@Query("lang") lang: String, @EHParams("oop") p: String): Observable<Any>
 
     @GET("json/")
     fun getIp(@Query("lang") lang: String): Observable<Any>

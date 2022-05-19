@@ -24,10 +24,8 @@ class MainActivity : AppCompatActivity() {
 
     private var curDownloadedFile = ""
 
-    private val testService: TestService
-        get() {
-            return ZApi.create(TestService::class.java, ApiErrorHandler).baseUrl(Constance.getBaseUrl()).header(Constance.getHeader()).build()
-        }
+    private val testService = ZApi.create(TestService::class.java, ApiErrorHandler).baseUrl(Constance.getBaseUrl()).header(Constance.getHeader()).build()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

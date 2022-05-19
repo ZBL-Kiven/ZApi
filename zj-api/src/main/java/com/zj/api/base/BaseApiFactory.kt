@@ -58,12 +58,13 @@ internal class BaseApiFactory<T>(
     }
 
     fun createService(cls: Class<T>): T {
-        val service = factory.createService(mZHttpServiceCreator, cls) {
-            it.forEach { (k, v) ->
+        val service = factory.createService(mZHttpServiceCreator, cls) { clear, map ->
+            if (clear) {
+                getCallAdapterFactory.resetParamData()
+            } else map.forEach { (k, v) ->
                 if (v != null) getCallAdapterFactory.methodParamData.addData(k, v)
             }
         }
-        getCallAdapterFactory.resetParamData()
         val e = if (preError == null) null else parseOrCreateHttpException("before invoke", urlProvider?.url(), header, preError)
         getCallAdapterFactory.preError = e
         getCallAdapterFactory.targetCls = cls

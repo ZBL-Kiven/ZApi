@@ -26,7 +26,7 @@ abstract class ApiFactory<T> {
     /**
      * if you're not use it with dynamic proxy , you'd better ignore this extend
      * */
-    open fun createService(mZHttpServiceCreator: ZHttpServiceCreator, cls: Class<T>, lazyParamFinder: (MutableMap<String, Any?>) -> Unit): T {
+    open fun createService(mZHttpServiceCreator: ZHttpServiceCreator, cls: Class<T>, lazyParamFinder: (Boolean, MutableMap<String, Any?>) -> Unit): T {
         return EHParameterProxy.create(mZHttpServiceCreator, cls, lazyParamFinder)
     }
 

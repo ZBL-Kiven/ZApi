@@ -15,6 +15,7 @@ object ApiErrorHandler : ErrorHandler() {
     }
 
     override suspend fun <R> interruptSuccessBody(id: String, code: Int, data: R?, ehParams: EHParam): R? {
+        Log.e("-------- ", "$ehParams")
         return super.interruptSuccessBody(id, code, data, ehParams)
     }
 
