@@ -63,6 +63,7 @@ internal class BaseApiFactory<T>(
                 if (v != null) getCallAdapterFactory.methodParamData.addData(k, v)
             }
         }
+        getCallAdapterFactory.resetParamData()
         val e = if (preError == null) null else parseOrCreateHttpException("before invoke", urlProvider?.url(), header, preError)
         getCallAdapterFactory.preError = e
         getCallAdapterFactory.targetCls = cls
@@ -79,5 +80,4 @@ internal class BaseApiFactory<T>(
         hsc.addCallAdapterFactory(getCallAdapterFactory)
         return hsc.build()
     }
-
 }

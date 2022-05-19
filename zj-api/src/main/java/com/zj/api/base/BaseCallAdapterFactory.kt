@@ -14,4 +14,8 @@ abstract class BaseCallAdapterFactory : CallAdapter.Factory() {
     internal var timeOutDefault: Long = 0
 
     internal var methodParamData = EHParam()
+
+    internal fun resetParamData() {
+        methodParamData = EHParam()
+    }
 }
