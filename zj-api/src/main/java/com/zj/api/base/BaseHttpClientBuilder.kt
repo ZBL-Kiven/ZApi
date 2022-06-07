@@ -1,9 +1,6 @@
 package com.zj.api.base
 
-import com.zj.api.interceptor.HttpLoggingInterceptor
-import com.zj.api.interceptor.Interceptor
-import com.zj.api.interceptor.LogLevel
-import com.zj.api.interceptor.UrlProvider
+import com.zj.api.interceptor.*
 import com.zj.api.utils.TrustAllCerts
 import com.zj.api.utils.TrustAllHostnameVerifier
 import com.zj.api.utils.getSslSocketFactory
@@ -15,7 +12,7 @@ import java.util.concurrent.TimeUnit
 
 open class BaseHttpClientBuilder {
 
-    open fun getHttpClient(clsName: String, header: MutableMap<String, String?>? = null, url: UrlProvider?, logAble: Boolean, timeout: Long, logLevel: LogLevel, certificate: Array<InputStream>? = null): OkHttpClient {
+    open fun getHttpClient(clsName: String, header: HeaderProvider?, url: UrlProvider?, logAble: Boolean, timeout: Long, logLevel: LogLevel, certificate: Array<InputStream>? = null): OkHttpClient {
         val builder = OkHttpClient.Builder()
         builder.addInterceptor(Interceptor(header, url))
         builder.callTimeout(timeout, TimeUnit.MILLISECONDS)

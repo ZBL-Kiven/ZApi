@@ -22,7 +22,6 @@ interface TestService {
     @GET("json/")
     suspend fun getIpCourSimple(@Query("lang") lang: String): Any?
 
-    @Mock(MockTest::class)
     @GET("json/")
     suspend fun getIpCour(@Query("lang") lang: String, @EHParams("bbb") s: String, @EHParams("aaa") p: String): SuspendObservable<Any>?
 }

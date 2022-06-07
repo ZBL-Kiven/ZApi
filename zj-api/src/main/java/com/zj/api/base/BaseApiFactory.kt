@@ -4,8 +4,8 @@ import com.zj.api.adapt.ZApiCallAdapterFactory
 import com.zj.api.interceptor.UrlProvider
 import com.zj.api.interfaces.ApiFactory
 import com.zj.api.eh.ErrorHandler
+import com.zj.api.interceptor.HeaderProvider
 import com.zj.api.interceptor.LogLevel
-import com.zj.api.utils.Constance.parseOrCreateHttpException
 import com.zj.ok3.Converter
 import com.zj.ok3.ZHttpServiceCreator
 import com.zj.ok3.converter.GsonConverterFactory
@@ -15,7 +15,7 @@ import okhttp3.OkHttpClient
 internal class BaseApiFactory<T>(
     private val clsName: String,
     private val timeout: Long,
-    private val header: MutableMap<String, String?>?,
+    private val header: HeaderProvider?,
     private val urlProvider: UrlProvider?,
     private val certificate: Array<InputStream>?,
     private val factory: ApiFactory<T>,
@@ -23,7 +23,6 @@ internal class BaseApiFactory<T>(
     private val mockAble: Boolean,
     private val logLevel: LogLevel,
     private val errorHandler: ErrorHandler?,
-    private val preError: Throwable?,
 ) {
 
     private val getOkHttpClient: OkHttpClient by lazy {
@@ -58,18 +57,23 @@ internal class BaseApiFactory<T>(
     }
 
     fun createService(cls: Class<T>): T {
-        val service = factory.createService(mZHttpServiceCreator, cls) { clear, map ->
-            if (clear) {
-                getCallAdapterFactory.resetParamData()
-            } else map.forEach { (k, v) ->
-                if (v != null) getCallAdapterFactory.methodParamData.addData(k, v)
+        var throwable: Throwable? = null
+        val service = try {
+            factory.createService(mZHttpServiceCreator, cls) { clear, map ->
+                if (clear) {
+                    getCallAdapterFactory.resetParamData()
+                } else map.forEach { (k, v) ->
+                    if (v != null) getCallAdapterFactory.methodParamData.addData(k, v)
+                }
             }
+        } catch (e: Exception) {
+            throwable = e
+            mZHttpServiceCreator.create(cls, null)
         }
-        val e = if (preError == null) null else parseOrCreateHttpException("before invoke", urlProvider?.url(), header, preError)
-        getCallAdapterFactory.preError = e
         getCallAdapterFactory.targetCls = cls
         getCallAdapterFactory.timeOutDefault = timeout
         getCallAdapterFactory.timeOutChangeListener = onTimeoutChanged
+        getCallAdapterFactory.preError = throwable
         return service
     }
 

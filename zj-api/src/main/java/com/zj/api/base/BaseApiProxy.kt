@@ -3,12 +3,9 @@
 package com.zj.api.base
 
 import com.zj.api.ZApi.Companion.mBaseTimeoutMills
-import com.zj.api.interceptor.HeaderProvider
-import com.zj.api.interceptor.UrlProvider
 import com.zj.api.interfaces.ApiFactory
 import com.zj.api.eh.ErrorHandler
-import com.zj.api.interceptor.LogLevel
-import com.zj.api.interceptor.plus
+import com.zj.api.interceptor.*
 import com.zj.api.utils.LogUtils
 import java.io.InputStream
 
@@ -92,22 +89,7 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
      * @param factory see [ApiFactory]
      * */
     fun build(factory: ApiFactory<T>? = null): T {
-        val apiFactory = createHttpFactory(factory)
+        val apiFactory = BaseApiFactory(clazz.simpleName, timeOut, header, baseUrl, certificate, factory ?: ApiFactory.Default(), debugAble, mockAble, logLevel, handler)
         return apiFactory.createService(clazz)
-    }
-
-    private fun createHttpFactory(factory: ApiFactory<T>?): BaseApiFactory<T> {
-        val map = mutableMapOf<String, String?>()
-        var throwable: Throwable? = null
-        try {
-            header?.headers()?.let { map.putAll(it) }
-        } catch (e: Throwable) {
-            throwable = e
-        } catch (e: Exception) {
-            throwable = e
-        } catch (e: java.lang.Exception) {
-            throwable = e
-        }
-        return BaseApiFactory(clazz.simpleName, timeOut, map, baseUrl, certificate, factory ?: ApiFactory.Default(), debugAble, mockAble, logLevel, handler, throwable)
     }
 }

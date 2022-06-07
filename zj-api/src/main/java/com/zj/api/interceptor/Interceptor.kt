@@ -11,7 +11,7 @@ import java.nio.charset.Charset
 import java.util.*
 
 
-class Interceptor(private val header: MutableMap<String, String?>? = null, private val urlProvider: UrlProvider?) : Interceptor {
+class Interceptor(private val header: HeaderProvider?, private val urlProvider: UrlProvider?) : Interceptor {
 
     companion object {
 
@@ -73,18 +73,19 @@ class Interceptor(private val header: MutableMap<String, String?>? = null, priva
             val proxy: UrlProvider.UrlProxy = urlProvider.getProxy()
             newBuilder.url(request.url().newBuilder().scheme(proxy.protocol).host(proxy.host).port(proxy.port).build())
         }
-        header?.let {
-            if (!it.containsKey("Content-Type")) {
-                newBuilder.addHeader("Content-Type", "application/json")
-            }
-            if (!it.containsKey("charset")) {
-                newBuilder.addHeader("charset", "utf-8")
-            }
-            it.forEach { e ->
-                e.value?.let { v -> newBuilder.addHeader(e.key, v) }
-            }
-        }
         return try {
+            val header = this.header?.toMap()
+            header?.let {
+                if (!it.containsKey("Content-Type")) {
+                    newBuilder.addHeader("Content-Type", "application/json")
+                }
+                if (!it.containsKey("charset")) {
+                    newBuilder.addHeader("charset", "utf-8")
+                }
+                it.forEach { e ->
+                    e.value?.let { v -> newBuilder.addHeader(e.key, v) }
+                }
+            }
             if ("POST" == chain.request().method()) {
                 val pl = header?.get("Content-Type") ?: "application/json"
                 val body = chain.request().body()!!
@@ -107,9 +108,9 @@ class Interceptor(private val header: MutableMap<String, String?>? = null, priva
         } catch (e: IOException) {
             onErrorResponse(request, 404, "IO exception")
         } catch (e: Exception) {
-            onErrorResponse(request, 400, "Unknown error")
+            onErrorResponse(request, 400, e.message ?: "Unknown error")
         } catch (e: java.lang.Exception) {
-            onErrorResponse(request, 400, "Unknown error")
+            onErrorResponse(request, 400, e.message ?: "Unknown error")
         }
     }
 

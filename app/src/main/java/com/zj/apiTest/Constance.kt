@@ -2,6 +2,7 @@ package com.zj.apiTest
 
 import com.zj.api.interceptor.HeaderProvider
 import com.zj.api.interceptor.UrlProvider
+import java.lang.NullPointerException
 
 
 object Constance {

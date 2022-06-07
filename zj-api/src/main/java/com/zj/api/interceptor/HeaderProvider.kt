@@ -30,6 +30,14 @@ operator fun HeaderProvider.plus(map: Map<String, String?>): HeaderProvider {
     }
 }
 
+fun HeaderProvider.toMap(): MutableMap<String, String?> {
+    val map = mutableMapOf<String, String?>()
+    headers()?.let {
+        map.putAll(it)
+    }
+    return map
+}
+
 operator fun HeaderProvider.plus(pair: Pair<String, String?>): HeaderProvider {
     return HeaderProvider.create {
         this@plus.headers()?.plus(pair)
