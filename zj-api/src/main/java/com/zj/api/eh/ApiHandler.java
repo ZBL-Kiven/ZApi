@@ -19,14 +19,14 @@ public @interface ApiHandler {
 
     /**
      * If you had set ErrorHandler, this annotation indicates what thread you want
-     * {@link com.zj.api.eh.ErrorHandler#interruptSuccessBody(String, int, Object, Continuation)} to run on.
+     * {@link com.zj.api.eh.ErrorHandler#interruptSuccessBody(String, int, Object, EHParam, Continuation)} (String, int, Object, Continuation)} to run on.
      * The thread you choose only takes effect in the EH scope.
      */
     @LimitScope String successEHScope() default "";
 
     /**
      * If you had set ErrorHandler, this annotation indicates what thread you want
-     * {@link com.zj.api.eh.ErrorHandler#interruptErrorBody(ApiException, Continuation)}  to run on.
+     * {@link com.zj.api.eh.ErrorHandler#interruptErrorBody(ApiException, EHParam, Continuation)} (ApiException, Continuation)}  to run on.
      * The thread you choose only takes effect in the EH scope.
      */
     @LimitScope String errorEHScope() default "";

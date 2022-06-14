@@ -1,11 +1,14 @@
 package com.zj.ok3;
 
+import androidx.annotation.NonNull;
+
 import java.lang.annotation.Annotation;
 
 
-
 // This class conforms to the annotation requirements documented on Annotation.
+@SuppressWarnings("ClassExplicitlyAnnotation")
 final class SkipCallbackExecutorImpl implements com.zj.ok3.SkipCallbackExecutor {
+
   private static final com.zj.ok3.SkipCallbackExecutor INSTANCE = new SkipCallbackExecutorImpl();
 
   static Annotation[] ensurePresent(Annotation[] annotations) {
@@ -35,6 +38,7 @@ final class SkipCallbackExecutorImpl implements com.zj.ok3.SkipCallbackExecutor 
     return 0;
   }
 
+  @NonNull
   @Override
   public String toString() {
     return "@" + SkipCallbackExecutor.class.getName() + "()";

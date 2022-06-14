@@ -48,9 +48,9 @@ final class OkHttpCall<T> implements Call<T> {
         }
     }
 
-    @NonNull
-    // We are a final type & this saves clearing state.
+    @NonNull // We are a final type & this saves clearing state.
     @Override
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
     public OkHttpCall<T> clone() {
         return new OkHttpCall<>(requestFactory, args, callFactory, responseConverter);
     }
@@ -199,10 +199,13 @@ final class OkHttpCall<T> implements Call<T> {
 
     Response<T> parseResponse(okhttp3.Response rawResponse) throws IOException {
         ResponseBody rawBody = rawResponse.body();
-
+        MediaType contentType = rawBody == null ? null : rawBody.contentType();
+        long contentLen = rawBody == null ? 0 : rawBody.contentLength();
         // Remove the body's source (the only stateful object) so we can pass the response along.
-        rawResponse = rawResponse.newBuilder().body(new NoContentResponseBody(rawBody.contentType(), rawBody.contentLength())).build();
-
+        rawResponse = rawResponse.newBuilder().body(new NoContentResponseBody(contentType, contentLen)).build();
+        if (rawBody == null) {
+            return Response.error(null, rawResponse);
+        }
         int code = rawResponse.code();
         if (code < 200 || code >= 300) {
             try {
@@ -274,6 +277,7 @@ final class OkHttpCall<T> implements Call<T> {
             return contentLength;
         }
 
+        @NonNull
         @Override
         public BufferedSource source() {
             throw new IllegalStateException("Cannot read raw response body of a converted body.");
@@ -311,6 +315,7 @@ final class OkHttpCall<T> implements Call<T> {
             return delegate.contentLength();
         }
 
+        @NonNull
         @Override
         public BufferedSource source() {
             return delegateSource;

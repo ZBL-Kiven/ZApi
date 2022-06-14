@@ -9,9 +9,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.lang.reflect.Type;
 
-
-
-
 /**
  * Change the behavior of a {@code Call<BodyType>} return type to not use the {@linkplain
  * ZHttpServiceCreator#callbackExecutor() callback executor} for invoking the {@link Callback#onResponse(Call,

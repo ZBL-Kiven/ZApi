@@ -3,13 +3,12 @@ package com.zj.ok3;
 import static com.zj.ok3.Utils.getRawType;
 import static com.zj.ok3.Utils.methodError;
 
-import java.io.IOException;
+import androidx.annotation.Nullable;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-
-import androidx.annotation.Nullable;
 
 import kotlin.coroutines.Continuation;
 import okhttp3.ResponseBody;

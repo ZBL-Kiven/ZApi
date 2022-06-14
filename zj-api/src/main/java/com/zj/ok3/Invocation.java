@@ -1,5 +1,7 @@
 package com.zj.ok3;
 
+import androidx.annotation.NonNull;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,7 +35,9 @@ import java.util.Objects;
  * for concurrent access. For best results declare ZHttpServiceCreator service interfaces using only immutable
  * types for parameters!
  */
+@SuppressWarnings("unused")
 public final class Invocation {
+
     public static Invocation of(Method method, List<?> arguments) {
         Objects.requireNonNull(method, "method == null");
         Objects.requireNonNull(arguments, "arguments == null");
@@ -59,6 +63,7 @@ public final class Invocation {
         return arguments;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return String.format("%s.%s() %s", method.getDeclaringClass().getName(), method.getName(), arguments);

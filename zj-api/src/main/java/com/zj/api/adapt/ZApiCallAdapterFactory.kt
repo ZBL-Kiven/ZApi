@@ -74,9 +74,9 @@ open class ZApiCallAdapterFactory<T>(private val errorHandler: ErrorHandler?, pr
     private fun getHandleScheduler(annotations: Array<Annotation>?): HandleScheduler {
         if (annotations == null) return HandleScheduler(ZApi.MAIN, ZApi.MAIN, UUID.randomUUID().toString(), 10 * 1000L)
         val ahi = (annotations.find { it is ApiHandler } as? ApiHandler)
-        val scopeSuccess = if (ahi?.successEHScope.isNullOrEmpty()) ZApi.MAIN else ahi!!.successEHScope
-        val scopeError = if (ahi?.errorEHScope.isNullOrEmpty()) ZApi.MAIN else ahi!!.errorEHScope
-        val id = if (ahi?.id.isNullOrEmpty()) UUID.randomUUID().toString() else ahi!!.id
+        val scopeSuccess = if (ahi == null || ahi.successEHScope.isEmpty()) ZApi.MAIN else ahi.successEHScope
+        val scopeError = if (ahi == null || ahi.errorEHScope.isEmpty()) ZApi.MAIN else ahi.errorEHScope
+        val id = if (ahi == null || ahi.id.isEmpty()) UUID.randomUUID().toString() else ahi.id
         val to = ahi?.timeOut ?: 0
         val timeOut = (if (to > 0) to else timeOutDefault).coerceAtLeast(1000)
         if (timeOut != timeOutDefault) {

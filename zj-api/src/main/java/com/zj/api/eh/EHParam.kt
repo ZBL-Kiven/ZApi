@@ -1,6 +1,7 @@
 package com.zj.api.eh
 
 
+@Suppress("unused")
 class EHParam {
 
     private val params: MutableMap<String, EHData<Any>> = mutableMapOf()

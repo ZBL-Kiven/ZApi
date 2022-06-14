@@ -17,7 +17,14 @@ import com.zj.ok3.ZHttpServiceCreator
 @Suppress("unused")
 internal class DefaultAdapterFactory<T> private constructor(private val scheduler: Scheduler?, private val isAsync: Boolean, private val pendingData: AdapterPendingData<T>) : CallAdapter.Factory() {
 
-
+    /**
+     * The main purpose here is to detect the return value of the function. After filtering by the upper layer,
+     * [returnType] should satisfy one of Flowable, Single,
+     * Maybe, and Observable to satisfy the callback request based on RxJava.
+     * In the future, RxJava may be completely discarded,
+     * and coroutine access control requests are completely used.
+     * It is necessary to optimize and study a series of issues such as upload and download progress monitoring.
+     * */
     override fun get(returnType: Type, annotations: Array<Annotation>, ZHttpServiceCreator: ZHttpServiceCreator): CallAdapter<*, *>? {
         val rawType = getRawType(returnType)
         if (rawType == Completable::class.java) {
