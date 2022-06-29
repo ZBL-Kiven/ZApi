@@ -14,12 +14,12 @@ class EHParam {
 
     @Suppress("UNCHECKED_CAST")
     fun <T> take(key: String): T? {
-        return params.remove(key) as? T?
+        return params.remove(key)?.data as? T?
     }
 
     @Suppress("UNCHECKED_CAST")
     fun <T> takeFist(): T? {
-        return params.values.firstOrNull() as? T?
+        return params.values.firstOrNull()?.data as? T?
     }
 
     data class EHData<T : Any>(val data: T)
