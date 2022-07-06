@@ -5,7 +5,6 @@ import com.zj.api.interceptor.UrlProvider
 import com.zj.api.interfaces.ApiFactory
 import com.zj.api.eh.ErrorHandler
 import com.zj.api.interceptor.HeaderProvider
-import com.zj.api.interceptor.LogLevel
 import com.zj.ok3.Converter
 import com.zj.ok3.ZHttpServiceCreator
 import com.zj.ok3.converter.GsonConverterFactory
@@ -21,7 +20,7 @@ internal class BaseApiFactory<T>(
     private val factory: ApiFactory<T>,
     private val debugAble: Boolean,
     private val mockAble: Boolean,
-    private val logLevel: LogLevel,
+    private val logLevel: Int,
     private val errorHandler: ErrorHandler?,
 ) {
 

@@ -18,7 +18,8 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
     private var debugAble: Boolean = true
     private var mockAble: Boolean = true
     private var certificate: Array<InputStream>? = null
-    private var logLevel = LogLevel.HEADERS + LogLevel.BASIC + LogLevel.RESULT_BODY
+    private var logLevel = LogLevel.NONE
+    private var logLevelSetting = false
 
     /**
      * set request certificate
@@ -62,6 +63,7 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
      * @Default HEADERS & BASIC & RESULT_BODY
      * */
     fun logLevel(level: LogLevel): BaseApiProxy<T, ERROR_HANDLER> {
+        logLevelSetting = true
         this.logLevel = level
         return this
     }
@@ -89,7 +91,9 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
      * @param factory see [ApiFactory]
      * */
     fun build(factory: ApiFactory<T>? = null): T {
-        val apiFactory = BaseApiFactory(clazz.simpleName, timeOut, header, baseUrl, certificate, factory ?: ApiFactory.Default(), debugAble, mockAble, logLevel, handler)
+        val logLv = logLevel.pollWith()
+        if (!logLevelSetting && logLv <= 0) LogLevel.HEADERS + LogLevel.BASIC + LogLevel.RESULT_BODY + LogLevel.REQUEST_BODY
+        val apiFactory = BaseApiFactory(clazz.simpleName, timeOut, header, baseUrl, certificate, factory ?: ApiFactory.Default(), debugAble, mockAble, logLv, handler)
         return apiFactory.createService(clazz)
     }
 }

@@ -10,6 +10,7 @@ import com.zj.api.ZApi
 import com.zj.api.call
 import com.zj.api.downloader.DownloadListener
 import com.zj.api.exception.ApiException
+import com.zj.api.interceptor.LogLevel
 import com.zj.api.interceptor.plus
 import com.zj.api.interfaces.RequestCancelable
 import com.zj.api.uploader.FileInfo
@@ -24,8 +25,11 @@ class MainActivity : AppCompatActivity() {
 
     private var curDownloadedFile = ""
 
-    private val testService = ZApi.create(TestService::class.java, ApiErrorHandler).baseUrl(Constance.getBaseUrl()).header(Constance.getHeader()).build()
-
+    private val testService = ZApi.create(TestService::class.java, ApiErrorHandler) //
+        .baseUrl(Constance.getBaseUrl()) //
+        .header(Constance.getHeader()) //
+        .logLevel(LogLevel.BASIC + LogLevel.RESULT_BODY + LogLevel.HEADERS + LogLevel.REQUEST_BODY) //
+        .build()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

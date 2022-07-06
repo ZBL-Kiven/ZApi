@@ -22,7 +22,7 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
         LogUtils.d(clsName, message)
     }
 
-    @Volatile private var level = LogLevel.NONE
+    @Volatile private var level: Int = LogLevel.NONE.with
 
     fun redactHeader(name: String) {
         val newHeadersToRedact = TreeSet(String.CASE_INSENSITIVE_ORDER)
@@ -32,29 +32,27 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
     }
 
     /** Change the level at which this interceptor logs.  */
-    fun setLevel(level: LogLevel?): HttpLoggingInterceptor {
+    fun setLevel(level: Int?): HttpLoggingInterceptor {
         if (level == null) throw NullPointerException("level == null. Use Level.NONE instead.")
         this.level = level
         return this
     }
 
-    fun getLevel(): LogLevel {
+    private fun getLevel(): Int {
         return level
     }
 
     override fun intercept(chain: Interceptor.Chain): Response {
-        val level = this.level
         val request = chain.request()
-        if (level.with == 0) {
+        if (getLevel() == 0) {
             return chain.proceed(request)
         }
-        val logBasic = level.with.and(LogLevel.BASIC.with) != 0
-        val logBody = level.with.and(LogLevel.REQUEST_BODY.with) != 0
-        val logResultBody = level.with.and(LogLevel.RESULT_BODY.with) != 0
-        val logHeaders = level.with.and(LogLevel.HEADERS.with) != 0
+        val logBasic = getLevel().and(LogLevel.BASIC.with) != 0
+        val logBody = getLevel().and(LogLevel.REQUEST_BODY.with) != 0
+        val logResultBody = getLevel().and(LogLevel.RESULT_BODY.with) != 0
+        val logHeaders = getLevel().and(LogLevel.HEADERS.with) != 0
         val requestBody = request.body()
         val hasRequestBody = requestBody != null
-
         val connection = chain.connection()
 
         //start
@@ -79,7 +77,6 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
                     logger.invoke("Content-Length: " + requestBody?.contentLength())
                 }
             }
-
             val headers = request.headers()
             var i = 0
             val count = headers.size()
@@ -91,33 +88,34 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
                 i++
             }
             logger.invoke("------------------------------ headers end ----------------------------")
-            val contentLength = requestBody?.contentLength()
-            if (!logBody || !hasRequestBody) {
-                logger.invoke("===> END " + request.method())
-            } else if (bodyHasUnknownEncoding(request.headers())) {
-                logger.invoke("===> END " + request.method() + " (encoded body omitted)")
-            } else {
-                logger.invoke(" ")
-                val buffer = Buffer()
-                requestBody?.writeTo(buffer)
-                var charset = UTF8 ?: Charset.defaultCharset()
-                val contentType = requestBody?.contentType()
-                if (contentType != null) {
-                    charset = contentType.charset(UTF8)
-                }
-                if (isPlaintext(buffer)) {
-                    if (logBody) {
-                        logger.invoke("------------------------------ body start ----------------------------")
-                        logger.invoke(buffer.readString(charset))
-                        logger.invoke("------------------------------ body end----------------------------")
-                    }
-                    logger.invoke("===> END " + request.method() + " (" + contentLength + "-byte body)")
-                } else {
-                    logger.invoke("===> END " + request.method() + " (binary " + requestBody?.contentLength() + "-byte body omitted)")
-                }
-            }
-            LogUtils.onSizeParsed(clsName, true, contentLength ?: 0L)
         }
+        val contentLen = requestBody?.contentLength()
+        if (!logBody || !hasRequestBody) {
+            logger.invoke("===> END " + request.method())
+        } else if (bodyHasUnknownEncoding(request.headers())) {
+            logger.invoke("===> END " + request.method() + " (encoded body omitted)")
+        } else {
+            logger.invoke(" ")
+            val buffer = Buffer()
+            requestBody?.writeTo(buffer)
+            var charset = UTF8 ?: Charset.defaultCharset()
+            val contentType = requestBody?.contentType()
+            if (contentType != null) {
+                charset = contentType.charset(UTF8)
+            }
+            if (isPlaintext(buffer)) {
+                if (logBody) {
+                    logger.invoke("------------------------------ body start ----------------------------")
+                    logger.invoke(buffer.readString(charset))
+                    logger.invoke("------------------------------ body end----------------------------")
+                }
+                logger.invoke("===> END " + request.method() + " (" + contentLen + "-byte body)")
+            } else {
+                logger.invoke("===> END " + request.method() + " (binary " + requestBody?.contentLength() + "-byte body omitted)")
+            }
+        }
+        LogUtils.onSizeParsed(clsName, true, contentLen ?: 0L)
+
 
         val startNs = System.nanoTime()
         val response: Response
@@ -140,7 +138,7 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
             logger.invoke("<=== " + response.code() + (if (response.message().isEmpty()) "" else ' ' + response.message()) + ' '.toString() + response.request().url() + " (" + tookMs + "ms" + (if (!logHeaders) ", $bodySize body" else "") + ')'.toString())
         }
         val headers = response.headers()
-        if (level.with.and(LogLevel.SERVER_HEADERS.with) != 0) {
+        if (getLevel().and(LogLevel.SERVER_HEADERS.with) != 0) {
             logger.invoke("------------------------------ server headers start----------------------------")
             var i = 0
             val count = headers.size()
@@ -236,14 +234,17 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
     }
 }
 
-enum class LogLevel(internal var with: Int) {
+enum class LogLevel(private val origin: Int, internal var with: Int = origin) {
 
-    NONE(0), SERVER_HEADERS(1 shl 2), HEADERS(1 shl 3), REQUEST_BODY(1 shl 4), BASIC(1 shl 5), RESULT_BODY(1 shl 6)
+    NONE(0), SERVER_HEADERS(1 shl 2), HEADERS(1 shl 3), REQUEST_BODY(1 shl 4), BASIC(1 shl 5), RESULT_BODY(1 shl 6);
+
+    fun pollWith(): Int {
+        val with = this.with
+        this.with = this.origin
+        return with
+    }
 }
 
-
 operator fun LogLevel.plus(other: LogLevel): LogLevel {
-    val r = LogLevel.NONE
-    r.with = with.or(other.with)
-    return r
+    return apply { with = with.or(other.with) }
 }

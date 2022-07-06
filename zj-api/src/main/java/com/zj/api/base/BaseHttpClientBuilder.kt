@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit
 
 open class BaseHttpClientBuilder {
 
-    open fun getHttpClient(clsName: String, header: HeaderProvider?, url: UrlProvider?, logAble: Boolean, timeout: Long, logLevel: LogLevel, certificate: Array<InputStream>? = null): OkHttpClient {
+    open fun getHttpClient(clsName: String, header: HeaderProvider?, url: UrlProvider?, logAble: Boolean, timeout: Long, logLevel: Int, certificate: Array<InputStream>? = null): OkHttpClient {
         val builder = OkHttpClient.Builder()
         builder.addInterceptor(Interceptor(header, url))
         builder.callTimeout(timeout, TimeUnit.MILLISECONDS)
