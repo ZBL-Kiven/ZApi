@@ -87,7 +87,6 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
                 }
                 i++
             }
-            logger.invoke("------------------------------ headers end ----------------------------")
         }
         val contentLen = requestBody?.contentLength()
         if (!logBody || !hasRequestBody) {
@@ -107,7 +106,6 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
                 if (logBody) {
                     logger.invoke("------------------------------ body start ----------------------------")
                     logger.invoke(buffer.readString(charset))
-                    logger.invoke("------------------------------ body end----------------------------")
                 }
                 logger.invoke("===> END " + request.method() + " (" + contentLen + "-byte body)")
             } else {
@@ -144,7 +142,6 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
                 logHeader(headers, i)
                 i++
             }
-            logger.invoke("------------------------------ server headers end----------------------------")
         }
         if (!HttpHeaders.hasBody(response)) {
             logger.invoke("<=== END HTTP")
@@ -177,7 +174,6 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
             if (logResultBody && contentLength != 0L) {
                 logger.invoke(buffer.clone().readString(charset))
             }
-            logger.invoke("------------------------------ response body end ----------------------------")
             val length = buffer.size()
             if (gzippedLength != null) {
                 LogUtils.onSizeParsed(clsName, false, gzippedLength)
