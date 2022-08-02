@@ -38,7 +38,7 @@ sealed class UploadTask<X : Builder<*>>(protected val builder: X, protected val 
         }
         if (!uploadInterceptor.intercept(builder, observer)) {
             val url = builder.url.url()
-            val api = ZApi.create(ZUploadService::class.java, builder.errorHandler).header(builder.headers).timeOut(builder.timeout).build()
+            val api = ZApi.create(ZUploadService::class.java, builder.errorHandler).debugAble(builder.logAble).logLevel(builder.logLevel).header(builder.headers).timeOut(builder.timeout).build()
             startUpload(url, api, subscribeOn)
         }
     }

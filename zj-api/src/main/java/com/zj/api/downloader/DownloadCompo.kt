@@ -24,6 +24,8 @@ class DownloadCompo internal constructor(val callId: String, private val builder
         ?: ZApi.create(DownloadService::class.java, builder.errorHandler) //
             .header(builder.headers) //
             .timeOut(builder.timeout) //
+            .debugAble(builder.logAble) //
+            .logLevel(builder.logLevel) //
             .build() //
             .download(builder.url.url()) //
 

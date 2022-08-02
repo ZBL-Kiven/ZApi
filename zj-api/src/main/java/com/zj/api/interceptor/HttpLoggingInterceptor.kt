@@ -115,8 +115,6 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
             }
         }
         LogUtils.onSizeParsed(clsName, true, contentLen ?: 0L)
-
-
         val startNs = System.nanoTime()
         val response: Response
         try {
@@ -242,6 +240,10 @@ enum class LogLevel(private val origin: Int, internal var with: Int = origin) {
         val with = this.with
         this.with = this.origin
         return with
+    }
+
+    companion object {
+        val Internal: LogLevel; get() = BASIC + HEADERS + REQUEST_BODY + SERVER_HEADERS + RESULT_BODY
     }
 }
 

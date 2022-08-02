@@ -25,10 +25,11 @@ class MainActivity : AppCompatActivity() {
 
     private var curDownloadedFile = ""
 
+    private val level = LogLevel.BASIC + LogLevel.RESULT_BODY + LogLevel.HEADERS + LogLevel.REQUEST_BODY
     private val testService = ZApi.create(TestService::class.java, ApiErrorHandler) //
         .baseUrl(Constance.getBaseUrl()) //
         .header(Constance.getHeader()) //
-        .logLevel(LogLevel.BASIC + LogLevel.RESULT_BODY + LogLevel.HEADERS + LogLevel.REQUEST_BODY) //
+        .logLevel(level) //
         .build()
 
     override fun onCreate(savedInstanceState: Bundle?) {

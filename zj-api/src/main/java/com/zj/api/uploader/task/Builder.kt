@@ -7,6 +7,7 @@ import com.zj.api.ZApi
 import com.zj.api.eh.ErrorHandler
 import com.zj.api.eh.LimitScope
 import com.zj.api.interceptor.HeaderProvider
+import com.zj.api.interceptor.LogLevel
 import com.zj.api.interceptor.UrlProvider
 import com.zj.api.uploader.FileInfo
 import com.zj.api.uploader.FileUploadListener
@@ -23,6 +24,8 @@ open class UploadBody(
     var headers: HeaderProvider? = null,
     var timeout: Long = 30000,
     var params: MutableMap<String, String?> = mutableMapOf(),
+    var logAble: Boolean = true,
+    var logLevel: LogLevel = LogLevel.Internal,
     var contentType: String = "multipart/form-data",
 )
 
@@ -52,6 +55,14 @@ sealed class Builder<S>(internal val url: UrlProvider) : UploadBody() {
 
     open fun header(vararg h: Pair<String, String?>): S {
         return header(mutableMapOf(*h))
+    }
+
+    open fun debugAble(able: Boolean) {
+        this.logAble = able
+    }
+
+    open fun logLevel(level: LogLevel) {
+        this.logLevel = level
     }
 
     open fun header(map: Map<String, String?>): S {
