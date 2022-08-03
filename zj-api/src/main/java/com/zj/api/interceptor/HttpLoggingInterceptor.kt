@@ -105,7 +105,12 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
             if (isPlaintext(buffer)) {
                 if (logBody) {
                     logger.invoke("------------------------------ body start ----------------------------")
-                    logger.invoke(buffer.readString(charset))
+                    val size = buffer.size()
+                    if (size > 2 * 1024 * 1024L) {
+                        logger.invoke("$size bytes content , it was too large and skipped to log the details.")
+                    } else {
+                        logger.invoke(buffer.readString(charset))
+                    }
                 }
                 logger.invoke("===> END " + request.method() + " (" + contentLen + "-byte body)")
             } else {
