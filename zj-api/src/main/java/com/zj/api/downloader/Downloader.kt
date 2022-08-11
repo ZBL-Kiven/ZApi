@@ -1,14 +1,12 @@
 package com.zj.api.downloader
 
 import okhttp3.ResponseBody
-import com.zj.ok3.Response
 import java.io.*
 
 @Suppress("MemberVisibilityCanBePrivate", "unused")
 internal object Downloader {
 
-    fun writeResponseToDisk(builder: DownloadBuilder, response: Response<ResponseBody>) {
-        val body = response.body()
+    fun writeResponseToDisk(builder: DownloadBuilder, body: ResponseBody?) {
         if (body == null) {
             builder.result { onError(builder.callId, NullPointerException("the downloaded response body was null.")) }
             return
@@ -39,7 +37,7 @@ internal object Downloader {
                 if (last < curProgress) builder.result { onProgress(builder.callId, curProgress) }
                 last = curProgress
             }
-            builder.result { onCompleted(builder.callId, file.absolutePath) }
+            builder.result { onSuccess(builder.callId, file.absolutePath) }
         } catch (e: IOException) {
             builder.result { onError(builder.callId, IOException("cannot to write bytes to file ,case :" + e.message)) }
         } finally {

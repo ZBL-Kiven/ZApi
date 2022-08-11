@@ -9,6 +9,7 @@ import com.zj.api.eh.LimitScope
 import com.zj.api.interceptor.HeaderProvider
 import com.zj.api.interceptor.LogLevel
 import com.zj.api.interceptor.UrlProvider
+import com.zj.api.interceptor.plus
 import com.zj.api.utils.Constance
 import java.io.File
 import java.net.URL
@@ -23,8 +24,7 @@ sealed class DownloadBody(
     var timeout: Long = 30000,
     var listener: DownloadListener? = null,
     var logAble: Boolean = true,
-    var logLevel: LogLevel = LogLevel.Internal,
-    var downloadInterceptor: DownloadInterceptor? = null,
+    var logLevel: LogLevel = LogLevel.REQUEST_BODY + LogLevel.HEADERS + LogLevel.SERVER_HEADERS,
 ) {
     fun <T> result(l: suspend DownloadListener.() -> T?) {
         listener?.let {
@@ -64,14 +64,6 @@ class DownloadBuilder private constructor(internal val url: UrlProvider, interna
     fun observerOn(@LimitScope scheduler: String): DownloadBuilder {
         this.scheduler = scheduler
         return this
-    }
-
-    fun debugAble(able: Boolean) {
-        this.logAble = able
-    }
-
-    fun logLevel(level: LogLevel) {
-        this.logLevel = level
     }
 
     fun header(headers: HeaderProvider?): DownloadBuilder {
@@ -115,9 +107,8 @@ class DownloadBuilder private constructor(internal val url: UrlProvider, interna
         return this
     }
 
-    fun start(listener: DownloadListener? = null, downloadInterceptor: DownloadInterceptor? = null): DownloadCompo {
+    fun start(listener: DownloadListener? = null): DownloadCompo {
         this.listener = listener
-        this.downloadInterceptor = downloadInterceptor
         return DownloadCompo(callId, this)
     }
 }

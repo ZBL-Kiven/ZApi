@@ -66,7 +66,7 @@ class Interceptor(private val header: HeaderProvider?, private val urlProvider: 
         }
     }
 
-    override fun intercept(chain: Interceptor.Chain): Response? {
+    override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
         val newBuilder = request.newBuilder()
         urlProvider?.url()?.let {

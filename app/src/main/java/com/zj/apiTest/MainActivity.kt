@@ -50,9 +50,13 @@ class MainActivity : AppCompatActivity() {
         val s = "downloading"
         v.text = s
         val f = File(cacheDir, "ZApi_download_test.png")
-        val url = "https://img0.baidu.com/it/u=1032173647,760525262&fm=253&fmt=auto&app=120&f=JPEG?w=1000&h=562"
+
+        //        val url = "https://cdn.test.utown.io/meeting-file/1683/IMG_20220726_201713.jpg"
+
+        val url = "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4"
         ZApi.Downloader.with(url, f).callId("111").errorHandler(ApiErrorHandler).timeout(3000).start(object : DownloadListener {
-            override suspend fun onCompleted(callId: String, absolutePath: String) {
+
+            override suspend fun onSuccess(callId: String, absolutePath: String) {
                 v.text = absolutePath
                 curDownloadedFile = absolutePath
             }
@@ -60,6 +64,10 @@ class MainActivity : AppCompatActivity() {
             override suspend fun onError(callId: String, e: Throwable?, isCanceled: Boolean) {
                 v.text = e?.message
                 e?.printStackTrace()
+            }
+
+            override suspend fun onProgress(callId: String, progress: Int) {
+                v.text = "$s - $progress%"
             }
         })
     }

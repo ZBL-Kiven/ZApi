@@ -129,14 +129,11 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
         }
 
         val tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs)
-        val responseBody = response.body() ?: return response
-        val contentLength = responseBody.contentLength()
 
         if (logBasic) {
-            val bodySize = if (contentLength != -1L) "$contentLength-byte" else "unknown-length"
             logger.invoke(" ")
             logger.invoke("------------------------------ result ----------------------------")
-            logger.invoke("<=== " + response.code() + (if (response.message().isEmpty()) "" else ' ' + response.message()) + ' '.toString() + response.request().url() + " (" + tookMs + "ms" + (if (!logHeaders) ", $bodySize body" else "") + ')'.toString())
+            logger.invoke("<=== " + response.code() + (if (response.message().isEmpty()) "" else ' ' + response.message()) + ' '.toString() + response.request().url() + " (" + tookMs + "ms" + ')'.toString())
         }
         val headers = response.headers()
         if (getLevel().and(LogLevel.SERVER_HEADERS.with) != 0) {
@@ -148,11 +145,13 @@ class HttpLoggingInterceptor constructor(private val clsName: String) : Intercep
                 i++
             }
         }
-        if (!HttpHeaders.hasBody(response)) {
+        if (!HttpHeaders.hasBody(response) || !logBody) {
             logger.invoke("<=== END HTTP")
         } else if (bodyHasUnknownEncoding(response.headers())) {
             logger.invoke("<=== END HTTP (encoded body omitted)")
         } else {
+            val responseBody = response.body() ?: return response
+            val contentLength = responseBody.contentLength()
             val source = responseBody.source()
             source.request(java.lang.Long.MAX_VALUE) // Buffer the entire body.
             var buffer = source.buffer
