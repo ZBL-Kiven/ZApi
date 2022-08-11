@@ -22,7 +22,7 @@ open class UploadBody(
     var deleteCompressFile: Boolean = false,
     var callId: String = UUID.randomUUID().toString(),
     var headers: HeaderProvider? = null,
-    var timeout: Long = 30000,
+    var timeout: Int = 30000,
     var params: MutableMap<String, String?> = mutableMapOf(),
     var logAble: Boolean = true,
     var logLevel: LogLevel = LogLevel.Internal,
@@ -75,7 +75,7 @@ sealed class Builder<S>(internal val url: UrlProvider) : UploadBody() {
         return this as S
     }
 
-    open fun timeout(t: Long): S {
+    open fun timeout(t: Int): S {
         this.timeout = t
         return this as S
     }

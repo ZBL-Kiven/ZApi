@@ -12,13 +12,13 @@ import java.util.concurrent.TimeUnit
 
 open class BaseHttpClientBuilder {
 
-    open fun getHttpClient(clsName: String, header: HeaderProvider?, url: UrlProvider?, logAble: Boolean, timeout: Long, logLevel: Int, certificate: Array<InputStream>? = null): OkHttpClient {
+    open fun getHttpClient(clsName: String, header: HeaderProvider?, url: UrlProvider?, logAble: Boolean, timeout: Int, logLevel: Int, certificate: Array<InputStream>? = null): OkHttpClient {
         val builder = OkHttpClient.Builder()
         builder.addInterceptor(Interceptor(header, url))
-        builder.callTimeout(timeout, TimeUnit.MILLISECONDS)
-        builder.connectTimeout(timeout, TimeUnit.MILLISECONDS)
-        builder.readTimeout(timeout * 2, TimeUnit.MILLISECONDS)
-        builder.writeTimeout(timeout, TimeUnit.MILLISECONDS)
+        val to = timeout.toLong()
+        builder.connectTimeout(to, TimeUnit.MILLISECONDS)
+        builder.readTimeout(to * 3, TimeUnit.MILLISECONDS)
+        builder.writeTimeout(to * 3, TimeUnit.MILLISECONDS)
         builder.buildSSLSocketFactory(certificate)
         val sslTrustManager = TrustAllHostnameVerifier()
         builder.hostnameVerifier(sslTrustManager)

@@ -10,6 +10,6 @@ import okhttp3.ResponseBody
 internal interface DownloadService {
     @Streaming
     @GET
-    @ApiHandler(timeOut = 10000)
+    @ApiHandler(readTimeOut = Int.MAX_VALUE)
     fun download(@Url url: String): Observable<ResponseBody>
 }

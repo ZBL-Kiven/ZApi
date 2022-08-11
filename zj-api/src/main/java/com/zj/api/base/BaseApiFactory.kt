@@ -13,7 +13,7 @@ import okhttp3.OkHttpClient
 
 internal class BaseApiFactory<T>(
     private val clsName: String,
-    private val timeout: Long,
+    private val timeout: Int,
     private val header: HeaderProvider?,
     private val urlProvider: UrlProvider?,
     private val certificate: Array<InputStream>?,
@@ -40,19 +40,22 @@ internal class BaseApiFactory<T>(
         initCreator()
     }
 
-    private val onTimeoutChanged = { l: Int ->
-        val callTimeout = kotlin.runCatching { getOkHttpClient::class.java.getDeclaredField("callTimeout") }.getOrNull()
-        val connectTimeoutMillis = kotlin.runCatching { getOkHttpClient::class.java.getDeclaredField("connectTimeout") }.getOrNull()
-        val readTimeoutMillis = kotlin.runCatching { getOkHttpClient::class.java.getDeclaredField("readTimeout") }.getOrNull()
-        val writeTimeoutMillis = kotlin.runCatching { getOkHttpClient::class.java.getDeclaredField("writeTimeout") }.getOrNull()
-        callTimeout?.isAccessible = true
-        connectTimeoutMillis?.isAccessible = true
-        readTimeoutMillis?.isAccessible = true
-        writeTimeoutMillis?.isAccessible = true
-        callTimeout?.set(getOkHttpClient, l)
-        connectTimeoutMillis?.set(getOkHttpClient, l)
-        readTimeoutMillis?.set(getOkHttpClient, l)
-        writeTimeoutMillis?.set(getOkHttpClient, l)
+    private val onTimeoutChanged = { l: Int, r: Int, w: Int ->
+        if (l > 0) {
+            val connectTimeoutMillis = kotlin.runCatching { getOkHttpClient::class.java.getDeclaredField("connectTimeout") }.getOrNull()
+            connectTimeoutMillis?.isAccessible = true
+            connectTimeoutMillis?.set(getOkHttpClient, l)
+        }
+        if (r > 0) {
+            val readTimeoutMillis = kotlin.runCatching { getOkHttpClient::class.java.getDeclaredField("readTimeout") }.getOrNull()
+            readTimeoutMillis?.isAccessible = true
+            readTimeoutMillis?.set(getOkHttpClient, r)
+        }
+        if (w > 0) {
+            val writeTimeoutMillis = kotlin.runCatching { getOkHttpClient::class.java.getDeclaredField("writeTimeout") }.getOrNull()
+            writeTimeoutMillis?.isAccessible = true
+            writeTimeoutMillis?.set(getOkHttpClient, w)
+        }
     }
 
     fun createService(cls: Class<T>): T {

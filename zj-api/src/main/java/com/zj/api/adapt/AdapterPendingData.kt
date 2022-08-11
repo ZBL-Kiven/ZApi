@@ -12,9 +12,9 @@ internal data class AdapterPendingData<T> constructor(val targetCls: Class<*>?, 
             return handleThreadTime <= 0
         }
 
-    private var handleThreadTime: Long = handleScheduler.timeOut
+    private var handleThreadTime: Int = handleScheduler.timeOut
 
-    fun perWait(mils: Long) {
+    fun perWait(mils: Int) {
         handleThreadTime -= mils
     }
 

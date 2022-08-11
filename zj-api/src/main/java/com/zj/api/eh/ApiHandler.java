@@ -1,6 +1,8 @@
 package com.zj.api.eh;
 
+import static com.zj.api.ZApi.mBaseReadTimeoutMills;
 import static com.zj.api.ZApi.mBaseTimeoutMills;
+import static com.zj.api.ZApi.mBaseWriteTimeoutMills;
 
 import com.zj.api.exception.ApiException;
 
@@ -44,5 +46,9 @@ public @interface ApiHandler {
      * this setting will override the wider timeout set by {@link com.zj.api.base.BaseApiProxy#timeOut(long)}.
      * It will still work with ErrorHandler's error handling timeout.
      */
-    long timeOut() default mBaseTimeoutMills;
+    int timeOut() default mBaseTimeoutMills;
+
+    int readTimeOut() default mBaseReadTimeoutMills;
+
+    int writeTimeOut() default mBaseWriteTimeoutMills;
 }

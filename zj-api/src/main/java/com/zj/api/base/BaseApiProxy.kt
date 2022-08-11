@@ -12,7 +12,7 @@ import java.io.InputStream
 @Suppress("MemberVisibilityCanBePrivate")
 class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Class<T>, private val handler: ERROR_HANDLER? = null) {
 
-    private var timeOut: Long = mBaseTimeoutMills
+    private var timeOut: Int = mBaseTimeoutMills
     private var header: HeaderProvider? = null
     private var baseUrl: UrlProvider? = null
     private var debugAble: Boolean = true
@@ -50,7 +50,7 @@ class BaseApiProxy<T : Any, ERROR_HANDLER : ErrorHandler>(private val clazz: Cla
      * the subsequent processing steps of ErrorHandler will be ignored, and the error will be returned directly to the calling thread.
      * @see [ErrorHandler.interruptErrorBody]
      * */
-    fun timeOut(timeOut: Long): BaseApiProxy<T, ERROR_HANDLER> {
+    fun timeOut(timeOut: Int): BaseApiProxy<T, ERROR_HANDLER> {
         this.timeOut = timeOut
         return this
     }

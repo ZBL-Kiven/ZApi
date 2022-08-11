@@ -34,7 +34,9 @@ class ZApi {
         const val MAIN = "mainScope"
         const val IO = "ioScope"
         const val CALCULATE = "calculate"
-        internal const val mBaseTimeoutMills = 10 * 1000L
+        internal const val mBaseTimeoutMills = 10 * 1000
+        internal const val mBaseReadTimeoutMills = 30 * 1000
+        internal const val mBaseWriteTimeoutMills = 30 * 1000
 
         init {
             RxJavaPlugins.setErrorHandler(this)

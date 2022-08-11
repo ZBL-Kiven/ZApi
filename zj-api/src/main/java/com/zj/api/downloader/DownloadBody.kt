@@ -21,7 +21,7 @@ sealed class DownloadBody(
     var scheduler: String = ZApi.MAIN,
     var callId: String = UUID.randomUUID().toString(),
     var headers: HeaderProvider? = null,
-    var timeout: Long = 30000,
+    var timeout: Int = 30000,
     var listener: DownloadListener? = null,
     var logAble: Boolean = true,
     var logLevel: LogLevel = LogLevel.REQUEST_BODY + LogLevel.HEADERS + LogLevel.SERVER_HEADERS,
@@ -85,7 +85,7 @@ class DownloadBuilder private constructor(internal val url: UrlProvider, interna
         return this
     }
 
-    fun timeout(t: Long): DownloadBuilder {
+    fun timeout(t: Int): DownloadBuilder {
         this.timeout = t
         return this
     }
